@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WS.MarkdownToPdf/WS.MarkdownToPdf.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WS.MarkdownToPdf.Tests/WS.MarkdownToPdf.Tests.csproj" />
+  </Folder>
+</Solution>

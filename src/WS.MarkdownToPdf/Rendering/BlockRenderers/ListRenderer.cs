@@ -1,0 +1,90 @@
+using Markdig.Syntax;
+using PdfSharp.Drawing;
+using WS.MarkdownToPdf.Exceptions;
+using WS.MarkdownToPdf.Layout;
+using WS.MarkdownToPdf.Rendering.InlineRenderers;
+
+namespace WS.MarkdownToPdf.Rendering.BlockRenderers;
+
+/// <summary>
+/// Renders a <see cref="ListBlock"/> (bulleted or ordered, single level only).
+/// </summary>
+public class ListRenderer
+{
+    private readonly InlineRenderer inlineRenderer = new();
+
+    public void Render(ListBlock list, RenderContext context)
+    {
+        ValidateSingleLevel(list);
+
+        var height = MeasureHeight(list, context);
+        context.EnsureSpace(height);
+
+        var itemNumber = 1;
+        foreach (var item in list.OfType<ListItemBlock>())
+        {
+            var prefix = list.IsOrdered ? $"{itemNumber}. " : "\u2022 ";
+            var font = new XFont(LayoutConstants.BodyFontFamily, LayoutConstants.BodyFontSize);
+            var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
+            var x = context.ContentLeft + LayoutConstants.ListIndent;
+
+            context.Graphics.DrawString(
+                prefix,
+                font,
+                XBrushes.Black,
+                new XPoint(context.ContentLeft, context.CurrentY + LayoutConstants.BodyFontSize));
+
+            // Render inline content of the first paragraph in the list item
+            if (item.FirstOrDefault() is ParagraphBlock paragraph && paragraph.Inline is not null)
+            {
+                var runs = inlineRenderer.GetTextRuns(paragraph.Inline, LayoutConstants.BodyFontSize);
+                var prefixWidth = context.Graphics.MeasureString(prefix, font).Width;
+
+                var currentX = context.ContentLeft + prefixWidth;
+                foreach (var run in runs)
+                {
+                    context.Graphics.DrawString(
+                        run.Text,
+                        run.Font,
+                        XBrushes.Black,
+                        new XPoint(currentX, context.CurrentY + run.Font.Size));
+
+                    if (run.IsStrikethrough)
+                    {
+                        var size = context.Graphics.MeasureString(run.Text, run.Font);
+                        var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * 0.35);
+                        context.Graphics.DrawLine(
+                            XPens.Black,
+                            currentX, strikeY,
+                            currentX + size.Width, strikeY);
+                    }
+
+                    currentX += context.Graphics.MeasureString(run.Text, run.Font).Width;
+                }
+            }
+
+            context.CurrentY += lineHeight;
+            itemNumber++;
+        }
+
+        context.CurrentY += LayoutConstants.ParagraphSpacing;
+    }
+
+    public double MeasureHeight(ListBlock list, RenderContext context)
+    {
+        var itemCount = list.OfType<ListItemBlock>().Count();
+        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
+        return itemCount * lineHeight + LayoutConstants.ParagraphSpacing;
+    }
+
+    private static void ValidateSingleLevel(ListBlock list)
+    {
+        foreach (var item in list.OfType<ListItemBlock>())
+        {
+            if (item.Any(child => child is ListBlock))
+            {
+                throw new UnsupportedMarkdownException("Nested lists are not supported");
+            }
+        }
+    }
+}

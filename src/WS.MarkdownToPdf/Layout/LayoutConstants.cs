@@ -44,12 +44,18 @@ public static class LayoutConstants
     public const double BlockQuoteBarWidth = 2;
     public const double BlockQuoteBarGap = 4;
 
+    // Lists
+    public const double ListItemSpacing = 2;
+
     // Tables
-    public const double TableCellPadding = 4;
+    public const double TableCellPadding = 2;
 
     // Horizontal rule
     public const double HorizontalRuleThickness = 0.5;
 
     // Columns
     public const double ColumnGutter = 14;
+
+    // Page numbers
+    public const double PageNumberFontSize = 8;
 }

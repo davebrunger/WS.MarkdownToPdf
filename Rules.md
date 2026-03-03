@@ -53,6 +53,8 @@ Interpretation:
 - **Threat**: The GM introduces a complication or obstacle.
 - **Advantage**: The player gains a benefit or opportunity.
 
+<!-- columns: 2 -->
+
 #### Example Advantages
 - gain cover
 - reposition
@@ -68,6 +70,8 @@ Interpretation:
 - attract attention
 - enemy reposition
 - equipment trouble
+
+<!-- /columns -->
 
 ### Doubles Rule (Cinematic Moments)
 If the two outcome dice match:
@@ -152,3 +156,5 @@ Every roll follows this order:
 - Narrate result
 
 <!-- /columns -->
+
+<!-- columns: 2 -->

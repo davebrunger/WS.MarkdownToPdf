@@ -54,7 +54,7 @@ public class ListRendererTests
         listRenderer.Render(list, context);
 
         var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
-        var expectedAdvance = 3 * lineHeight + LayoutConstants.ParagraphSpacing;
+        var expectedAdvance = 3 * lineHeight + 3 * LayoutConstants.ListItemSpacing + LayoutConstants.ParagraphSpacing;
         Assert.Equal(initialY + expectedAdvance, context.CurrentY, precision: 2);
     }
 

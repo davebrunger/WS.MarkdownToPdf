@@ -356,4 +356,139 @@ public class ColumnRendererTests
         pdf.Save(stream, false);
         Assert.True(stream.Length > 0);
     }
+
+    [Fact]
+    public void Render_NestedColumns_ProducesValidPdf()
+    {
+        var markdown = """
+            <!-- columns: 2 -->
+
+            ## Left Heading
+
+            Left paragraph content.
+
+            <!-- columns: 2 -->
+
+            Nested left.
+
+            Nested right.
+
+            <!-- /columns -->
+
+            ## Right Heading
+
+            Right paragraph content.
+
+            <!-- /columns -->
+            """;
+
+        var doc = parser.Parse(markdown);
+        using var pdf = renderer.Render(doc);
+
+        Assert.Equal(1, pdf.PageCount);
+        using var stream = new MemoryStream();
+        pdf.Save(stream, false);
+        Assert.True(stream.Length > 0);
+    }
+
+    [Fact]
+    public void Render_NestedColumnsWithTables_ProducesValidPdf()
+    {
+        var markdown = """
+            <!-- columns: 2 -->
+
+            Outer left content.
+
+            <!-- columns: 2 -->
+
+            | A | B |
+            |---|---|
+            | 1 | 2 |
+
+            | C | D |
+            |---|---|
+            | 3 | 4 |
+
+            <!-- /columns -->
+
+            Outer right content.
+
+            <!-- /columns -->
+            """;
+
+        var doc = parser.Parse(markdown);
+        using var pdf = renderer.Render(doc);
+
+        Assert.Equal(1, pdf.PageCount);
+        using var stream = new MemoryStream();
+        pdf.Save(stream, false);
+        Assert.True(stream.Length > 0);
+    }
+
+    [Fact]
+    public void Render_NestedThreeColumnsInTwoColumns_ProducesValidPdf()
+    {
+        var markdown = """
+            <!-- columns: 2 -->
+
+            ## Section A
+
+            <!-- columns: 3 -->
+
+            Col 1.
+
+            Col 2.
+
+            Col 3.
+
+            <!-- /columns -->
+
+            ## Section B
+
+            A paragraph in the second outer column.
+
+            <!-- /columns -->
+            """;
+
+        var doc = parser.Parse(markdown);
+        using var pdf = renderer.Render(doc);
+
+        Assert.Equal(1, pdf.PageCount);
+        using var stream = new MemoryStream();
+        pdf.Save(stream, false);
+        Assert.True(stream.Length > 0);
+    }
+
+    [Fact]
+    public void Render_NestedColumnsDepthTracking_ClosesOuterCorrectly()
+    {
+        // Ensures the outer <!-- /columns --> is not consumed by the inner section
+        var markdown = """
+            <!-- columns: 2 -->
+
+            Before nested.
+
+            <!-- columns: 2 -->
+
+            Inner left.
+
+            Inner right.
+
+            <!-- /columns -->
+
+            After nested.
+
+            <!-- /columns -->
+
+            This footer is outside all columns.
+            """;
+
+        var doc = parser.Parse(markdown);
+        using var pdf = renderer.Render(doc);
+
+        Assert.Equal(1, pdf.PageCount);
+        using var stream = new MemoryStream();
+        pdf.Save(stream, false);
+        Assert.True(stream.Length > 0);
+    }
 }

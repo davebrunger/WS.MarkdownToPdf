@@ -75,6 +75,7 @@ public class ListRenderer
                 context.CurrentY += lineHeight;
             }
 
+            context.CurrentY += LayoutConstants.ListItemSpacing;
             itemNumber++;
         }
 
@@ -105,6 +106,7 @@ public class ListRenderer
                 totalHeight += lineHeight;
             }
 
+            totalHeight += LayoutConstants.ListItemSpacing;
             itemNumber++;
         }
 

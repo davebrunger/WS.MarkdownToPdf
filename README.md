@@ -184,7 +184,32 @@ Block six.
 - Content is distributed automatically — blocks flow left-to-right, balancing column heights when everything fits on the page
 - When content exceeds the remaining page space, columns are filled to the bottom of the page and remaining blocks overflow to the next page (still in column layout)
 - All standard block elements (paragraphs, headings, lists, tables, quotes, thematic breaks) work inside columns
+- **Nested columns** are supported (up to 2 levels) — place a `<!-- columns: N -->` section inside an outer column section to subdivide a column
 - The directives are standard HTML comments, so other Markdown renderers (GitHub, VS Code preview, etc.) silently ignore them
+
+Nested columns:
+
+```markdown
+<!-- columns: 2 -->
+
+## Left Heading
+
+Left column content.
+
+<!-- columns: 2 -->
+
+Nested left.
+
+Nested right.
+
+<!-- /columns -->
+
+## Right Heading
+
+Right column content.
+
+<!-- /columns -->
+```
 
 ### Error Handling
 

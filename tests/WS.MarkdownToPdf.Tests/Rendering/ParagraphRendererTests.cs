@@ -1,3 +1,4 @@
+using Markdig.Syntax;
 using PdfSharp.Pdf;
 using WS.MarkdownToPdf.Layout;
 using WS.MarkdownToPdf.Parsing;
@@ -34,5 +35,47 @@ public class ParagraphRendererTests
         using var stream = new MemoryStream();
         pdf.Save(stream, false);
         Assert.True(stream.Length > 0);
+    }
+
+    [Fact]
+    public void Render_LongLine_WrapsAndAdvancesYByMultipleLines()
+    {
+        var longText = string.Join(" ", Enumerable.Repeat("word", 80));
+        var doc = parser.Parse(longText);
+
+        using var pdfDoc = new PdfDocument();
+        var context = new RenderContext(pdfDoc);
+        var initialY = context.CurrentY;
+
+        var paragraphBlock = doc.Descendants<ParagraphBlock>().First();
+        var sut = new WS.MarkdownToPdf.Rendering.BlockRenderers.ParagraphRenderer();
+        sut.Render(paragraphBlock, context);
+
+        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
+        var singleLineAdvance = lineHeight + LayoutConstants.ParagraphSpacing;
+
+        // Long text must wrap to more than one line
+        Assert.True(context.CurrentY - initialY > singleLineAdvance);
+    }
+
+    [Fact]
+    public void Render_SoftLineBreak_TreatedAsSingleLine()
+    {
+        // A single newline within a paragraph is a soft break, not a new paragraph
+        var doc = parser.Parse("Line one\nLine two");
+
+        using var pdfDoc = new PdfDocument();
+        var context = new RenderContext(pdfDoc);
+        var initialY = context.CurrentY;
+
+        var paragraphBlock = doc.Descendants<ParagraphBlock>().First();
+        var sut = new WS.MarkdownToPdf.Rendering.BlockRenderers.ParagraphRenderer();
+        sut.Render(paragraphBlock, context);
+
+        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
+        var singleLineAdvance = lineHeight + LayoutConstants.ParagraphSpacing;
+
+        // Soft break joins text on same line (may word-wrap, but not forced two lines)
+        Assert.Equal(initialY + singleLineAdvance, context.CurrentY, precision: 2);
     }
 }

@@ -21,10 +21,10 @@ public static class LayoutConstants
     // Body font
     public const string BodyFontFamily = "Times New Roman";
     public const string MonoFontFamily = "Courier New";
-    public const double BodyFontSize = 12;
+    public const double BodyFontSize = 10;
 
     // Heading font sizes
-    public static readonly double[] HeadingFontSizes = [24, 20, 16, 14, 12, 10];
+    public static readonly double[] HeadingFontSizes = [20, 16, 14, 12, 10, 8];
 
     /// <summary>
     /// Returns the font size for a heading level (1–6).
@@ -34,7 +34,7 @@ public static class LayoutConstants
 
     // Spacing
     public const double LineSpacingMultiplier = 1.2;
-    public const double ParagraphSpacing = 6;
+    public const double ParagraphSpacing = 5;
 
     // Lists
     public const double ListIndent = 20;
@@ -49,4 +49,7 @@ public static class LayoutConstants
 
     // Horizontal rule
     public const double HorizontalRuleThickness = 0.5;
+
+    // Columns
+    public const double ColumnGutter = 14;
 }

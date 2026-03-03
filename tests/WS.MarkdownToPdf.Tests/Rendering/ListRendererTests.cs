@@ -69,6 +69,10 @@ public class ListRendererTests
         var context = new RenderContext(pdfDoc);
 
         var listRenderer = new ListRenderer();
-        Assert.Throws<UnsupportedMarkdownException>(() => listRenderer.Render(list, context));
+        var ex = Assert.Throws<UnsupportedMarkdownException>(() => listRenderer.Render(list, context));
+        Assert.True(ex.Line > 0);
+        Assert.True(ex.Column > 0);
+        Assert.Contains("line", ex.Message);
+        Assert.Contains("column", ex.Message);
     }
 }

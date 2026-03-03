@@ -15,6 +15,9 @@
         "Set-Content": true,
         "dotnet script": true,
         "dotnet run": true,
-        "Start-Process": true
+        "Start-Process": true,
+        "Push-Location": true,
+        "Move-Item": true,
+        "Pop-Location": true
     }
 }

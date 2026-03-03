@@ -27,6 +27,19 @@ public class QuoteBlockRendererTests
     }
 
     [Fact]
+    public void Render_MultilineQuote_ProducesValidPdf()
+    {
+        var doc = parser.Parse("> Line one\n> Line two");
+
+        using var pdf = renderer.Render(doc);
+
+        Assert.Equal(1, pdf.PageCount);
+        using var stream = new MemoryStream();
+        pdf.Save(stream, false);
+        Assert.True(stream.Length > 0);
+    }
+
+    [Fact]
     public void Render_SingleQuote_AdvancesYPosition()
     {
         var markdown = "> This is a quote";
@@ -46,6 +59,25 @@ public class QuoteBlockRendererTests
     }
 
     [Fact]
+    public void Render_MultilineQuote_AdvancesYByTwoLines()
+    {
+        var markdown = "> Line one\n> Line two";
+        var doc = parser.Parse(markdown);
+        var quote = doc.Descendants<QuoteBlock>().First();
+
+        using var pdfDoc = new PdfDocument();
+        var context = new RenderContext(pdfDoc);
+        var initialY = context.CurrentY;
+
+        var quoteRenderer = new QuoteBlockRenderer();
+        quoteRenderer.Render(quote, context);
+
+        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
+        var expectedAdvance = 2 * lineHeight + LayoutConstants.ParagraphSpacing;
+        Assert.Equal(initialY + expectedAdvance, context.CurrentY, precision: 2);
+    }
+
+    [Fact]
     public void Render_NestedQuote_ThrowsUnsupportedMarkdownException()
     {
         var markdown = "> Outer quote\n>> Nested quote";
@@ -56,6 +88,10 @@ public class QuoteBlockRendererTests
         var context = new RenderContext(pdfDoc);
 
         var quoteRenderer = new QuoteBlockRenderer();
-        Assert.Throws<UnsupportedMarkdownException>(() => quoteRenderer.Render(quote, context));
+        var ex = Assert.Throws<UnsupportedMarkdownException>(() => quoteRenderer.Render(quote, context));
+        Assert.True(ex.Line > 0);
+        Assert.True(ex.Column > 0);
+        Assert.Contains("line", ex.Message);
+        Assert.Contains("column", ex.Message);
     }
 }

@@ -66,6 +66,18 @@ public class InlineRenderer
                 runs.Add(new TextRun(code.Content, monoFont));
                 break;
 
+            case LineBreakInline lineBreak:
+                var breakFont = new XFont(LayoutConstants.BodyFontFamily, baseFontSize, currentStyle);
+                if (lineBreak.IsHard)
+                {
+                    runs.Add(new TextRun("", breakFont, IsLineBreak: true));
+                }
+                else
+                {
+                    runs.Add(new TextRun("", breakFont, IsSoftLineBreak: true));
+                }
+                break;
+
             case ContainerInline container:
                 foreach (var child in container)
                 {
@@ -74,7 +86,7 @@ public class InlineRenderer
                 break;
 
             default:
-                throw new UnsupportedMarkdownException(inline.GetType().Name);
+                throw new UnsupportedMarkdownException(inline.GetType().Name, inline.Line + 1, inline.Column + 1);
         }
     }
 }

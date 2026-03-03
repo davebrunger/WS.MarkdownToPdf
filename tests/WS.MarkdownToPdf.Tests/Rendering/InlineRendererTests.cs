@@ -98,4 +98,18 @@ public class InlineRendererTests
         Assert.True(run.Font.Bold);
         Assert.True(run.Font.Italic);
     }
+
+    [Fact]
+    public void GetTextRuns_SoftLineBreak_ProducesSoftLineBreakRun()
+    {
+        var doc = parser.Parse("> Line one\n> Line two");
+        var paragraph = doc.Descendants<ParagraphBlock>().First();
+
+        var runs = sut.GetTextRuns(paragraph.Inline!, LayoutConstants.BodyFontSize);
+
+        Assert.Contains(runs, r => r.IsSoftLineBreak);
+        var textRuns = runs.Where(r => !r.IsSoftLineBreak).ToList();
+        Assert.Contains(textRuns, r => r.Text.Contains("Line one"));
+        Assert.Contains(textRuns, r => r.Text.Contains("Line two"));
+    }
 }

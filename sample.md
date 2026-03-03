@@ -30,4 +30,26 @@ A paragraph with ~~strikethrough~~ formatting and some `inline code` too.
 
 ### Conclusion
 
+> Some witty remark that makes you think
+> Split over two lines! 
+
+## Two-Column Layout
+
+<!-- columns: 2 -->
+
+### First Heading
+
+This content is rendered in the **left** column. Paragraphs, lists, and other block elements work inside columns.
+
+- Bullet A
+- Bullet B
+
+### Second Heading
+
+This content is rendered in the **right** column. The column directives are HTML comments, so other Markdown renderers ignore them.
+
+> A quote inside a column.
+
+<!-- /columns -->
+
 Final paragraph to close the document.

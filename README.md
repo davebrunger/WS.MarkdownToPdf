@@ -8,7 +8,7 @@ A .NET 10 library that converts Markdown documents to PDF using [Markdig](https:
 
 | Element | Syntax | Notes |
 |---|---|---|
-| Headings | `# H1` through `###### H6` | Scaled font sizes (24 → 10 pt) |
+| Headings | `# H1` through `###### H6` | Scaled font sizes (20 → 8 pt) |
 | Bold | `**text**` | |
 | Italic | `*text*` | |
 | Strikethrough | `~~text~~` | |
@@ -19,6 +19,7 @@ A .NET 10 library that converts Markdown documents to PDF using [Markdig](https:
 | Block quotes | `> text` | Grey left bar, indented, single-level |
 | Tables | Pipe tables | Equal-width columns, bold header row |
 | Thematic breaks | `---` | Horizontal rule |
+| Multi-column layout | `<!-- columns: N -->` | 2+ columns via HTML comments |
 
 ### PDF Output
 
@@ -144,6 +145,47 @@ Regular text, **bold**, *italic*, ~~strikethrough~~, and `inline code`.
 ---
 ```
 
+**Multi-column layout** (2 or more columns, invisible to other renderers)
+
+```markdown
+<!-- columns: 2 -->
+
+First paragraph goes in the left column.
+
+Second paragraph goes in the right column.
+
+Third paragraph goes in whichever column needs it.
+
+<!-- /columns -->
+```
+
+Three columns:
+
+```markdown
+<!-- columns: 3 -->
+
+Block one.
+
+Block two.
+
+Block three.
+
+Block four.
+
+Block five.
+
+Block six.
+
+<!-- /columns -->
+```
+
+- Use `<!-- columns: N -->` to start an N-column section (N ≥ 2)
+- Use `<!-- /columns -->` to end the section
+- Content is distributed automatically — blocks flow left-to-right, balancing column heights when everything fits on the page
+- When content exceeds the remaining page space, columns are filled to the bottom of the page and remaining blocks overflow to the next page (still in column layout)
+- All standard block elements (paragraphs, headings, lists, tables, quotes, thematic breaks) work inside columns
+- The directives are standard HTML comments, so other Markdown renderers (GitHub, VS Code preview, etc.) silently ignore them
+
 ### Error Handling
 
 The converter throws `UnsupportedMarkdownException` when it encounters a Markdown element that has no renderer — for example fenced code blocks, images, or nested lists. Catch it to provide a user-friendly message:
@@ -170,10 +212,10 @@ catch (UnsupportedMarkdownException ex)
 |---|---|
 | Page size | A4 (210 × 297 mm) |
 | Margins | 20 mm on all sides |
-| Body font | Times New Roman 12 pt |
+| Body font | Times New Roman 10 pt |
 | Mono font | Courier New (inline code) |
 | Line spacing | 1.2× |
-| Paragraph spacing | 6 pt |
+| Paragraph spacing | 5 pt |
 
 Headings are automatically prevented from appearing as orphans at the bottom of a page — if a heading won't fit with at least some following content, it is moved to the next page.
 

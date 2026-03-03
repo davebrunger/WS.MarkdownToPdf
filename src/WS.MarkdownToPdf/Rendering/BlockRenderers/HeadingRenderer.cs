@@ -22,9 +22,10 @@ public class HeadingRenderer
         var font = new XFont(LayoutConstants.BodyFontFamily, fontSize, XFontStyleEx.Bold);
         var headingHeight = MeasureHeight(heading, context);
 
-        // Look ahead: heading must stay with the next block
+        // Look ahead: heading must stay with the next block (skip in column layout
+        // where the distribution algorithm handles page fitting)
         var combinedHeight = headingHeight + LayoutConstants.ParagraphSpacing;
-        if (index + 1 < blocks.Count)
+        if (!context.IsInColumnLayout && index + 1 < blocks.Count)
         {
             combinedHeight += MeasureNextBlockHeight(blocks[index + 1], context);
         }
@@ -32,27 +33,41 @@ public class HeadingRenderer
         context.EnsureSpace(combinedHeight);
 
         var runs = inlineRenderer.GetTextRuns(heading.Inline!, fontSize);
-        var currentX = context.ContentLeft;
-        foreach (var run in runs)
-        {
-            var runFont = new XFont(LayoutConstants.BodyFontFamily, fontSize, run.Font.Style);
-            context.Graphics.DrawString(
-                run.Text,
-                runFont,
-                XBrushes.Black,
-                new XPoint(currentX, context.CurrentY + fontSize));
+        var lines = LineWrapper.WrapLines(runs, context.Graphics, context.ContentWidth);
+        var lineHeight = fontSize * LayoutConstants.LineSpacingMultiplier;
 
-            currentX += context.Graphics.MeasureString(run.Text, runFont).Width;
+        foreach (var line in lines)
+        {
+            var currentX = context.ContentLeft;
+            foreach (var run in line)
+            {
+                var runFont = new XFont(LayoutConstants.BodyFontFamily, fontSize, run.Font.Style);
+                context.Graphics.DrawString(
+                    run.Text,
+                    runFont,
+                    XBrushes.Black,
+                    new XPoint(currentX, context.CurrentY + fontSize));
+
+                currentX += context.Graphics.MeasureString(run.Text, runFont).Width;
+            }
+
+            context.CurrentY += lineHeight;
         }
 
-        context.CurrentY += headingHeight;
+        context.CurrentY += LayoutConstants.ParagraphSpacing;
     }
 
     public double MeasureHeight(HeadingBlock heading, RenderContext context)
     {
         var fontSize = LayoutConstants.GetHeadingFontSize(heading.Level);
-        return fontSize * LayoutConstants.LineSpacingMultiplier
-               + LayoutConstants.ParagraphSpacing;
+        var lineHeight = fontSize * LayoutConstants.LineSpacingMultiplier;
+
+        if (heading.Inline is null)
+            return lineHeight + LayoutConstants.ParagraphSpacing;
+
+        var runs = inlineRenderer.GetTextRuns(heading.Inline, fontSize);
+        var lines = LineWrapper.WrapLines(runs, context.Graphics, context.ContentWidth);
+        return lines.Count * lineHeight + LayoutConstants.ParagraphSpacing;
     }
 
     private double MeasureNextBlockHeight(Block nextBlock, RenderContext context) =>
@@ -64,6 +79,7 @@ public class HeadingRenderer
             QuoteBlock q => new QuoteBlockRenderer().MeasureHeight(q, context),
             Markdig.Extensions.Tables.Table tbl => new TableRenderer().MeasureHeight(tbl, context),
             HeadingBlock h => MeasureHeight(h, context),
-            _ => throw new UnsupportedMarkdownException(nextBlock.GetType().Name)
+            HtmlBlock => 0,
+            _ => throw new UnsupportedMarkdownException(nextBlock.GetType().Name, nextBlock.Line + 1, nextBlock.Column + 1)
         };
 }

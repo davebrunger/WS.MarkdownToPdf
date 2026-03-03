@@ -7,7 +7,8 @@ using WS.MarkdownToPdf.Rendering.InlineRenderers;
 namespace WS.MarkdownToPdf.Rendering.BlockRenderers;
 
 /// <summary>
-/// Renders a <see cref="QuoteBlock"/> with indentation and a grey left bar (single level only).
+/// Renders a <see cref="QuoteBlock"/> with indentation, a grey left bar, word wrapping,
+/// and line-break support (single level only).
 /// </summary>
 public class QuoteBlockRenderer
 {
@@ -23,6 +24,8 @@ public class QuoteBlockRenderer
         var barX = context.ContentLeft + LayoutConstants.BlockQuoteBarGap;
         var textX = context.ContentLeft + LayoutConstants.BlockQuoteIndent;
         var barPen = new XPen(XColors.LightGray, LayoutConstants.BlockQuoteBarWidth);
+        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
+        var availableWidth = context.ContentWidth - LayoutConstants.BlockQuoteIndent;
 
         // Draw the left bar
         context.Graphics.DrawLine(
@@ -36,29 +39,35 @@ public class QuoteBlockRenderer
             if (child.Inline is null) continue;
 
             var runs = inlineRenderer.GetTextRuns(child.Inline, LayoutConstants.BodyFontSize);
-            var currentX = textX;
-            foreach (var run in runs)
-            {
-                context.Graphics.DrawString(
-                    run.Text,
-                    run.Font,
-                    XBrushes.Black,
-                    new XPoint(currentX, context.CurrentY + run.Font.Size));
+            runs = PromoteSoftLineBreaks(runs);
+            var lines = LineWrapper.WrapLines(runs, context.Graphics, availableWidth);
 
-                if (run.IsStrikethrough)
+            foreach (var line in lines)
+            {
+                var currentX = textX;
+                foreach (var run in line)
                 {
-                    var size = context.Graphics.MeasureString(run.Text, run.Font);
-                    var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * 0.35);
-                    context.Graphics.DrawLine(
-                        XPens.Black,
-                        currentX, strikeY,
-                        currentX + size.Width, strikeY);
+                    context.Graphics.DrawString(
+                        run.Text,
+                        run.Font,
+                        XBrushes.Black,
+                        new XPoint(currentX, context.CurrentY + run.Font.Size));
+
+                    if (run.IsStrikethrough)
+                    {
+                        var size = context.Graphics.MeasureString(run.Text, run.Font);
+                        var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * 0.35);
+                        context.Graphics.DrawLine(
+                            XPens.Black,
+                            currentX, strikeY,
+                            currentX + size.Width, strikeY);
+                    }
+
+                    currentX += context.Graphics.MeasureString(run.Text, run.Font).Width;
                 }
 
-                currentX += context.Graphics.MeasureString(run.Text, run.Font).Width;
+                context.CurrentY += lineHeight;
             }
-
-            context.CurrentY += LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
         }
 
         context.CurrentY += LayoutConstants.ParagraphSpacing;
@@ -66,16 +75,36 @@ public class QuoteBlockRenderer
 
     public double MeasureHeight(QuoteBlock quote, RenderContext context)
     {
-        var paragraphCount = quote.OfType<ParagraphBlock>().Count();
         var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
-        return paragraphCount * lineHeight + LayoutConstants.ParagraphSpacing;
+        var availableWidth = context.ContentWidth - LayoutConstants.BlockQuoteIndent;
+        var totalLines = 0;
+
+        foreach (var child in quote.OfType<ParagraphBlock>())
+        {
+            if (child.Inline is null) continue;
+
+            var runs = inlineRenderer.GetTextRuns(child.Inline, LayoutConstants.BodyFontSize);
+            runs = PromoteSoftLineBreaks(runs);
+            var lines = LineWrapper.WrapLines(runs, context.Graphics, availableWidth);
+            totalLines += lines.Count;
+        }
+
+        return Math.Max(totalLines, 1) * lineHeight + LayoutConstants.ParagraphSpacing;
     }
+
+    /// <summary>
+    /// In block quotes, each <c>&gt;</c> marker should start a new line.
+    /// Soft line breaks (produced by continuation lines) are promoted to hard line breaks.
+    /// </summary>
+    private static List<TextRun> PromoteSoftLineBreaks(List<TextRun> runs) =>
+        runs.Select(r => r.IsSoftLineBreak ? r with { IsSoftLineBreak = false, IsLineBreak = true } : r).ToList();
 
     private static void ValidateSingleLevel(QuoteBlock quote)
     {
-        if (quote.Any(child => child is QuoteBlock))
+        var nestedQuote = quote.OfType<QuoteBlock>().FirstOrDefault();
+        if (nestedQuote is not null)
         {
-            throw new UnsupportedMarkdownException("Nested block quotes are not supported");
+            throw new UnsupportedMarkdownException("Nested block quotes are not supported", nestedQuote.Line + 1, nestedQuote.Column + 1);
         }
     }
 }

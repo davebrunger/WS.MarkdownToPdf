@@ -39,12 +39,12 @@ public class HeadingRendererTests
     }
 
     [Theory]
-    [InlineData("# H1", 24)]
-    [InlineData("## H2", 20)]
-    [InlineData("### H3", 16)]
-    [InlineData("#### H4", 14)]
-    [InlineData("##### H5", 12)]
-    [InlineData("###### H6", 10)]
+    [InlineData("# H1", 20)]
+    [InlineData("## H2", 16)]
+    [InlineData("### H3", 14)]
+    [InlineData("#### H4", 12)]
+    [InlineData("##### H5", 10)]
+    [InlineData("###### H6", 8)]
     public void Render_HeadingLevel_UsesCorrectFontSize(string markdown, double expectedFontSize)
     {
         var doc = parser.Parse(markdown);

@@ -27,6 +27,9 @@ public class PdfRendererTests
         var document = new MarkdownDocument();
         document.Add(new FencedCodeBlock(null!));
 
-        Assert.Throws<UnsupportedMarkdownException>(() => sut.Render(document));
+        var ex = Assert.Throws<UnsupportedMarkdownException>(() => sut.Render(document));
+        Assert.Contains("FencedCodeBlock", ex.Message);
+        Assert.Contains("line", ex.Message);
+        Assert.Contains("column", ex.Message);
     }
 }

@@ -6,20 +6,29 @@ namespace WS.MarkdownToPdf.Rendering;
 
 /// <summary>
 /// Tracks the current drawing state: page, Y position, graphics surface, and fonts.
+/// Supports optional column-layout overrides for multi-column rendering.
 /// </summary>
 public class RenderContext
 {
+    private double? columnLeft;
+    private double? columnWidth;
+
     public PdfDocument Document { get; }
     public PdfPage CurrentPage { get; private set; }
     public XGraphics Graphics { get; private set; }
     public double CurrentY { get; set; }
 
-    public double ContentLeft => LayoutConstants.Margin;
-    public double ContentRight => LayoutConstants.PageWidth - LayoutConstants.Margin;
-    public double ContentWidth => LayoutConstants.ContentWidth;
+    public double ContentLeft => columnLeft ?? LayoutConstants.Margin;
+    public double ContentRight => ContentLeft + ContentWidth;
+    public double ContentWidth => columnWidth ?? LayoutConstants.ContentWidth;
     public double ContentTop => LayoutConstants.Margin;
     public double ContentBottom => LayoutConstants.PageHeight - LayoutConstants.Margin;
     public double RemainingHeight => ContentBottom - CurrentY;
+
+    /// <summary>
+    /// True when rendering inside a multi-column section.
+    /// </summary>
+    public bool IsInColumnLayout => columnLeft.HasValue;
 
     public RenderContext(PdfDocument document)
     {
@@ -57,5 +66,23 @@ public class RenderContext
         page.Width = XUnit.FromMillimeter(LayoutConstants.PageWidthMm);
         page.Height = XUnit.FromMillimeter(LayoutConstants.PageHeightMm);
         return page;
+    }
+
+    /// <summary>
+    /// Constrains the content area to a single column.
+    /// </summary>
+    public void SetColumnLayout(double left, double width)
+    {
+        columnLeft = left;
+        columnWidth = width;
+    }
+
+    /// <summary>
+    /// Restores the full-width content area.
+    /// </summary>
+    public void ClearColumnLayout()
+    {
+        columnLeft = null;
+        columnWidth = null;
     }
 }

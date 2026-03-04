@@ -21,11 +21,11 @@ public class QuoteBlockRenderer
         var height = MeasureHeight(quote, context);
         context.EnsureSpace(height);
 
-        var barX = context.ContentLeft + LayoutConstants.BlockQuoteBarGap;
-        var textX = context.ContentLeft + LayoutConstants.BlockQuoteIndent;
-        var barPen = new XPen(XColors.LightGray, LayoutConstants.BlockQuoteBarWidth);
-        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
-        var availableWidth = context.ContentWidth - LayoutConstants.BlockQuoteIndent;
+        var barX = context.ContentLeft + context.Layout.BlockQuoteBarGap;
+        var textX = context.ContentLeft + context.Layout.BlockQuoteIndent;
+        var barPen = new XPen(context.Layout.BlockQuoteBarColor, context.Layout.BlockQuoteBarWidth);
+        var lineHeight = context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier;
+        var availableWidth = context.ContentWidth - context.Layout.BlockQuoteIndent;
 
         // Draw the left bar
         context.Graphics.DrawLine(
@@ -38,7 +38,7 @@ public class QuoteBlockRenderer
         {
             if (child.Inline is null) continue;
 
-            var runs = inlineRenderer.GetTextRuns(child.Inline, LayoutConstants.BodyFontSize);
+            var runs = inlineRenderer.GetTextRuns(child.Inline, context.Layout.BodyFontSize, context.Layout);
             runs = PromoteSoftLineBreaks(runs);
             var lines = LineWrapper.WrapLines(runs, context.Graphics, availableWidth);
 
@@ -56,7 +56,7 @@ public class QuoteBlockRenderer
                     if (run.IsStrikethrough)
                     {
                         var size = context.Graphics.MeasureString(run.Text, run.Font);
-                        var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * 0.35);
+                        var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * context.Layout.StrikethroughOffsetRatio);
                         context.Graphics.DrawLine(
                             XPens.Black,
                             currentX, strikeY,
@@ -70,26 +70,26 @@ public class QuoteBlockRenderer
             }
         }
 
-        context.CurrentY += LayoutConstants.ParagraphSpacing;
+        context.CurrentY += context.Layout.ParagraphSpacing;
     }
 
     public double MeasureHeight(QuoteBlock quote, RenderContext context)
     {
-        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
-        var availableWidth = context.ContentWidth - LayoutConstants.BlockQuoteIndent;
+        var lineHeight = context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier;
+        var availableWidth = context.ContentWidth - context.Layout.BlockQuoteIndent;
         var totalLines = 0;
 
         foreach (var child in quote.OfType<ParagraphBlock>())
         {
             if (child.Inline is null) continue;
 
-            var runs = inlineRenderer.GetTextRuns(child.Inline, LayoutConstants.BodyFontSize);
+            var runs = inlineRenderer.GetTextRuns(child.Inline, context.Layout.BodyFontSize, context.Layout);
             runs = PromoteSoftLineBreaks(runs);
             var lines = LineWrapper.WrapLines(runs, context.Graphics, availableWidth);
             totalLines += lines.Count;
         }
 
-        return Math.Max(totalLines, 1) * lineHeight + LayoutConstants.ParagraphSpacing;
+        return Math.Max(totalLines, 1) * lineHeight + context.Layout.ParagraphSpacing;
     }
 
     /// <summary>

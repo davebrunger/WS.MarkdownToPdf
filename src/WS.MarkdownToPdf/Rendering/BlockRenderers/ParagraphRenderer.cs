@@ -14,11 +14,11 @@ public class ParagraphRenderer
 
     public void Render(ParagraphBlock paragraph, RenderContext context)
     {
-        var runs = inlineRenderer.GetTextRuns(paragraph.Inline!, LayoutConstants.BodyFontSize);
+        var runs = inlineRenderer.GetTextRuns(paragraph.Inline!, context.Layout.BodyFontSize, context.Layout);
         runs = FlattenSoftLineBreaks(runs);
         var lines = LineWrapper.WrapLines(runs, context.Graphics, context.ContentWidth);
-        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
-        var height = lines.Count * lineHeight + LayoutConstants.ParagraphSpacing;
+        var lineHeight = context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier;
+        var height = lines.Count * lineHeight + context.Layout.ParagraphSpacing;
 
         context.EnsureSpace(height);
 
@@ -37,7 +37,7 @@ public class ParagraphRenderer
 
                 if (run.IsStrikethrough)
                 {
-                    var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * 0.35);
+                    var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * context.Layout.StrikethroughOffsetRatio);
                     context.Graphics.DrawLine(
                         XPens.Black,
                         currentX, strikeY,
@@ -50,22 +50,22 @@ public class ParagraphRenderer
             context.CurrentY += lineHeight;
         }
 
-        context.CurrentY += LayoutConstants.ParagraphSpacing;
+        context.CurrentY += context.Layout.ParagraphSpacing;
     }
 
     public double MeasureHeight(ParagraphBlock paragraph, RenderContext context)
     {
         if (paragraph.Inline is null)
         {
-            return LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier
-                   + LayoutConstants.ParagraphSpacing;
+            return context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier
+                   + context.Layout.ParagraphSpacing;
         }
 
-        var runs = inlineRenderer.GetTextRuns(paragraph.Inline, LayoutConstants.BodyFontSize);
+        var runs = inlineRenderer.GetTextRuns(paragraph.Inline, context.Layout.BodyFontSize, context.Layout);
         runs = FlattenSoftLineBreaks(runs);
         var lines = LineWrapper.WrapLines(runs, context.Graphics, context.ContentWidth);
-        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
-        return lines.Count * lineHeight + LayoutConstants.ParagraphSpacing;
+        var lineHeight = context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier;
+        return lines.Count * lineHeight + context.Layout.ParagraphSpacing;
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public class ParagraphRenderer
         if (paragraph.Inline is null)
             return 1;
 
-        var runs = inlineRenderer.GetTextRuns(paragraph.Inline, LayoutConstants.BodyFontSize);
+        var runs = inlineRenderer.GetTextRuns(paragraph.Inline, context.Layout.BodyFontSize, context.Layout);
         runs = FlattenSoftLineBreaks(runs);
         return LineWrapper.WrapLines(runs, context.Graphics, context.ContentWidth).Count;
     }

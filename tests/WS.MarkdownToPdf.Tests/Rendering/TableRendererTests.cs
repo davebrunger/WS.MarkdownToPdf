@@ -42,7 +42,7 @@ public class TableRendererTests
         tableRenderer.Render(table, context);
 
         var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
-        var rowHeight = lineHeight + 2 * LayoutConstants.TableCellPadding;
+        var rowHeight = lineHeight + 2 * LayoutConstants.TableCellPaddingV;
         // 2 rows (header + data) + paragraph spacing
         var expectedAdvance = 2 * rowHeight + LayoutConstants.ParagraphSpacing;
         Assert.Equal(initialY + expectedAdvance, context.CurrentY, precision: 2);
@@ -63,7 +63,7 @@ public class TableRendererTests
         tableRenderer.Render(table, context);
 
         var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
-        var rowHeight = lineHeight + 2 * LayoutConstants.TableCellPadding;
+        var rowHeight = lineHeight + 2 * LayoutConstants.TableCellPaddingV;
         // 4 rows (1 header + 3 data) + paragraph spacing
         var expectedAdvance = 4 * rowHeight + LayoutConstants.ParagraphSpacing;
         Assert.Equal(initialY + expectedAdvance, context.CurrentY, precision: 2);

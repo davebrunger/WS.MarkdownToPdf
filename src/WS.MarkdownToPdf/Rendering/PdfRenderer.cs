@@ -35,10 +35,10 @@ public partial class PdfRenderer : IPdfRenderer
     }
 
     /// <inheritdoc />
-    public PdfDocument Render(MarkdownDocument document)
+    public PdfDocument Render(MarkdownDocument document, LayoutOptions? layout = null)
     {
         var pdf = new PdfDocument();
-        var context = new RenderContext(pdf);
+        var context = new RenderContext(pdf, layout);
 
         var blocks = document.ToList();
         var i = 0;
@@ -55,7 +55,7 @@ public partial class PdfRenderer : IPdfRenderer
         }
 
         context.Graphics.Dispose();
-        AddPageNumbers(pdf);
+        AddPageNumbers(pdf, context.Layout);
 
         return pdf;
     }
@@ -64,11 +64,11 @@ public partial class PdfRenderer : IPdfRenderer
     /// Draws page numbers in the bottom margin of every page:
     /// right-aligned on odd pages, left-aligned on even pages.
     /// </summary>
-    private static void AddPageNumbers(PdfDocument pdf)
+    private static void AddPageNumbers(PdfDocument pdf, LayoutOptions layout)
     {
-        var font = new XFont(LayoutConstants.BodyFontFamily, LayoutConstants.PageNumberFontSize);
-        var pageNumberY = LayoutConstants.PageHeight - LayoutConstants.Margin
-                          + (LayoutConstants.Margin - LayoutConstants.PageNumberFontSize) / 2;
+        var font = new XFont(layout.BodyFontFamily, layout.PageNumberFontSize);
+        var pageNumberY = layout.PageHeight - layout.Margin
+                          + (layout.Margin - layout.PageNumberFontSize) / 2;
 
         for (var p = 0; p < pdf.PageCount; p++)
         {
@@ -81,14 +81,14 @@ public partial class PdfRenderer : IPdfRenderer
             if (isOddPage)
             {
                 var textWidth = gfx.MeasureString(pageNumber, font).Width;
-                var x = LayoutConstants.Margin + LayoutConstants.ContentWidth - textWidth;
+                var x = layout.Margin + layout.ContentWidth - textWidth;
                 gfx.DrawString(pageNumber, font, XBrushes.Black,
-                    new XPoint(x, pageNumberY + LayoutConstants.PageNumberFontSize));
+                    new XPoint(x, pageNumberY + layout.PageNumberFontSize));
             }
             else
             {
                 gfx.DrawString(pageNumber, font, XBrushes.Black,
-                    new XPoint(LayoutConstants.Margin, pageNumberY + LayoutConstants.PageNumberFontSize));
+                    new XPoint(layout.Margin, pageNumberY + layout.PageNumberFontSize));
             }
         }
     }
@@ -146,7 +146,7 @@ public partial class PdfRenderer : IPdfRenderer
         // Compute column geometry
         var baseLeft = context.ContentLeft;
         var fullContentWidth = context.ContentWidth;
-        var gutterWidth = LayoutConstants.ColumnGutter;
+        var gutterWidth = context.Layout.ColumnGutter;
         var totalGutterWidth = (columnCount - 1) * gutterWidth;
         var columnWidth = (fullContentWidth - totalGutterWidth) / columnCount;
 
@@ -429,7 +429,7 @@ public partial class PdfRenderer : IPdfRenderer
 
         var outerWidth = context.ContentWidth;
         var outerLeft = context.ContentLeft;
-        var gutterWidth = LayoutConstants.ColumnGutter;
+        var gutterWidth = context.Layout.ColumnGutter;
         var totalGutter = (columnCount - 1) * gutterWidth;
         var innerColWidth = (outerWidth - totalGutter) / columnCount;
 
@@ -486,7 +486,7 @@ public partial class PdfRenderer : IPdfRenderer
 
         var baseLeft = context.ContentLeft;
         var fullWidth = context.ContentWidth;
-        var gutterWidth = LayoutConstants.ColumnGutter;
+        var gutterWidth = context.Layout.ColumnGutter;
         var totalGutter = (columnCount - 1) * gutterWidth;
         var innerColWidth = (fullWidth - totalGutter) / columnCount;
 

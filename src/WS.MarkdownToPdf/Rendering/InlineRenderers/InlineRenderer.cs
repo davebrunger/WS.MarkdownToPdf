@@ -14,10 +14,11 @@ public class InlineRenderer
     /// <summary>
     /// Extracts styled text runs from the given inline container.
     /// </summary>
-    public List<TextRun> GetTextRuns(ContainerInline container, double baseFontSize)
+    public List<TextRun> GetTextRuns(ContainerInline container, double baseFontSize, LayoutOptions? layout = null)
     {
         var runs = new List<TextRun>();
-        CollectRuns(container, baseFontSize, XFontStyleEx.Regular, false, runs);
+        var opts = layout ?? LayoutConstants.Default;
+        CollectRuns(container, baseFontSize, XFontStyleEx.Regular, false, opts, runs);
         return runs;
     }
 
@@ -26,6 +27,7 @@ public class InlineRenderer
         double baseFontSize,
         XFontStyleEx currentStyle,
         bool isStrikethrough,
+        LayoutOptions layout,
         List<TextRun> runs)
     {
         switch (inline)
@@ -33,7 +35,7 @@ public class InlineRenderer
             case LiteralInline literal:
                 if (literal.Content.Length > 0)
                 {
-                    var font = new XFont(LayoutConstants.BodyFontFamily, baseFontSize, currentStyle);
+                    var font = new XFont(layout.BodyFontFamily, baseFontSize, currentStyle);
                     runs.Add(new TextRun(literal.Content.ToString(), font, isStrikethrough));
                 }
                 break;
@@ -57,17 +59,17 @@ public class InlineRenderer
 
                 foreach (var child in emphasis)
                 {
-                    CollectRuns(child, baseFontSize, newStyle, newStrikethrough, runs);
+                    CollectRuns(child, baseFontSize, newStyle, newStrikethrough, layout, runs);
                 }
                 break;
 
             case CodeInline code:
-                var monoFont = new XFont(LayoutConstants.MonoFontFamily, baseFontSize, XFontStyleEx.Regular);
+                var monoFont = new XFont(layout.MonoFontFamily, baseFontSize, XFontStyleEx.Regular);
                 runs.Add(new TextRun(code.Content, monoFont));
                 break;
 
             case LineBreakInline lineBreak:
-                var breakFont = new XFont(LayoutConstants.BodyFontFamily, baseFontSize, currentStyle);
+                var breakFont = new XFont(layout.BodyFontFamily, baseFontSize, currentStyle);
                 if (lineBreak.IsHard)
                 {
                     runs.Add(new TextRun("", breakFont, IsLineBreak: true));
@@ -81,7 +83,7 @@ public class InlineRenderer
             case ContainerInline container:
                 foreach (var child in container)
                 {
-                    CollectRuns(child, baseFontSize, currentStyle, isStrikethrough, runs);
+                    CollectRuns(child, baseFontSize, currentStyle, isStrikethrough, layout, runs);
                 }
                 break;
 

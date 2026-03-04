@@ -21,8 +21,8 @@ public class ListRenderer
         context.EnsureSpace(height);
 
         var itemNumber = 1;
-        var font = new XFont(LayoutConstants.BodyFontFamily, LayoutConstants.BodyFontSize);
-        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
+        var font = new XFont(context.Layout.BodyFontFamily, context.Layout.BodyFontSize);
+        var lineHeight = context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier;
 
         foreach (var item in list.OfType<ListItemBlock>())
         {
@@ -33,12 +33,12 @@ public class ListRenderer
                 prefix,
                 font,
                 XBrushes.Black,
-                new XPoint(context.ContentLeft, context.CurrentY + LayoutConstants.BodyFontSize));
+                new XPoint(context.ContentLeft, context.CurrentY + context.Layout.BodyFontSize));
 
             // Render inline content with word wrapping
             if (item.FirstOrDefault() is ParagraphBlock paragraph && paragraph.Inline is not null)
             {
-                var runs = inlineRenderer.GetTextRuns(paragraph.Inline, LayoutConstants.BodyFontSize);
+                var runs = inlineRenderer.GetTextRuns(paragraph.Inline, context.Layout.BodyFontSize, context.Layout);
                 var availableWidth = context.ContentWidth - prefixWidth;
                 var lines = LineWrapper.WrapLines(runs, context.Graphics, availableWidth);
                 var textX = context.ContentLeft + prefixWidth;
@@ -57,7 +57,7 @@ public class ListRenderer
                         if (run.IsStrikethrough)
                         {
                             var size = context.Graphics.MeasureString(run.Text, run.Font);
-                            var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * 0.35);
+                            var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * context.Layout.StrikethroughOffsetRatio);
                             context.Graphics.DrawLine(
                                 XPens.Black,
                                 currentX, strikeY,
@@ -75,17 +75,17 @@ public class ListRenderer
                 context.CurrentY += lineHeight;
             }
 
-            context.CurrentY += LayoutConstants.ListItemSpacing;
+            context.CurrentY += context.Layout.ListItemSpacing;
             itemNumber++;
         }
 
-        context.CurrentY += LayoutConstants.ParagraphSpacing;
+        context.CurrentY += context.Layout.ParagraphSpacing;
     }
 
     public double MeasureHeight(ListBlock list, RenderContext context)
     {
-        var font = new XFont(LayoutConstants.BodyFontFamily, LayoutConstants.BodyFontSize);
-        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
+        var font = new XFont(context.Layout.BodyFontFamily, context.Layout.BodyFontSize);
+        var lineHeight = context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier;
         var totalHeight = 0.0;
 
         var itemNumber = 1;
@@ -97,7 +97,7 @@ public class ListRenderer
 
             if (item.FirstOrDefault() is ParagraphBlock paragraph && paragraph.Inline is not null)
             {
-                var runs = inlineRenderer.GetTextRuns(paragraph.Inline, LayoutConstants.BodyFontSize);
+                var runs = inlineRenderer.GetTextRuns(paragraph.Inline, context.Layout.BodyFontSize, context.Layout);
                 var lines = LineWrapper.WrapLines(runs, context.Graphics, availableWidth);
                 totalHeight += lines.Count * lineHeight;
             }
@@ -106,11 +106,11 @@ public class ListRenderer
                 totalHeight += lineHeight;
             }
 
-            totalHeight += LayoutConstants.ListItemSpacing;
+            totalHeight += context.Layout.ListItemSpacing;
             itemNumber++;
         }
 
-        return totalHeight + LayoutConstants.ParagraphSpacing;
+        return totalHeight + context.Layout.ParagraphSpacing;
     }
 
     private static void ValidateSingleLevel(ListBlock list)

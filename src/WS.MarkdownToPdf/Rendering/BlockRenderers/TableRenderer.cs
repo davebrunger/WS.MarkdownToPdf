@@ -24,8 +24,8 @@ public class TableRenderer
         if (rows.Count == 0) return;
 
         var columnCount = rows.Max(r => r.Count);
-        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
-        var rowHeight = lineHeight + (2 * LayoutConstants.TableCellPadding);
+        var lineHeight = context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier;
+        var rowHeight = lineHeight + (2 * context.Layout.TableCellPaddingV);
 
         // Measure natural column widths (widest cell content + padding on each side)
         var columnWidths = MeasureColumnWidths(rows, columnCount, context);
@@ -58,7 +58,7 @@ public class TableRenderer
                         if (paragraph?.Inline is not null)
                         {
                             var isHeader = row.IsHeader;
-                            var runs = inlineRenderer.GetTextRuns(paragraph.Inline, LayoutConstants.BodyFontSize);
+                            var runs = inlineRenderer.GetTextRuns(paragraph.Inline, context.Layout.BodyFontSize, context.Layout);
 
                             // Measure total text width for alignment
                             var totalTextWidth = 0.0;
@@ -77,14 +77,14 @@ public class TableRenderer
                             double textX;
                             if (col == 0)
                             {
-                                textX = cellX + columnWidths[col] - LayoutConstants.TableCellPadding - totalTextWidth;
+                                textX = cellX + columnWidths[col] - context.Layout.TableCellPaddingH - totalTextWidth;
                             }
                             else
                             {
-                                textX = cellX + LayoutConstants.TableCellPadding;
+                                textX = cellX + context.Layout.TableCellPaddingH;
                             }
 
-                            var textY = context.CurrentY + LayoutConstants.TableCellPadding + LayoutConstants.BodyFontSize;
+                            var textY = context.CurrentY + context.Layout.TableCellPaddingV + context.Layout.BodyFontSize;
 
                             foreach (var (text, font) in fonts)
                             {
@@ -107,22 +107,22 @@ public class TableRenderer
             if (row.IsHeader)
             {
                 var ruleY = context.CurrentY + rowHeight;
-                var pen = new XPen(XColors.Black, 0.5);
+                var pen = new XPen(XColors.Black, context.Layout.TableHeaderRuleThickness);
                 context.Graphics.DrawLine(pen, tableLeft, ruleY, tableLeft + tableWidth, ruleY);
             }
 
             context.CurrentY += rowHeight;
         }
 
-        context.CurrentY += LayoutConstants.ParagraphSpacing;
+        context.CurrentY += context.Layout.ParagraphSpacing;
     }
 
     public double MeasureHeight(Table table, RenderContext context)
     {
         var rowCount = table.OfType<TableRow>().Count();
-        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
-        var rowHeight = lineHeight + (2 * LayoutConstants.TableCellPadding);
-        return rowCount * rowHeight + LayoutConstants.ParagraphSpacing;
+        var lineHeight = context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier;
+        var rowHeight = lineHeight + (2 * context.Layout.TableCellPaddingV);
+        return rowCount * rowHeight + context.Layout.ParagraphSpacing;
     }
 
     /// <summary>
@@ -143,7 +143,7 @@ public class TableRenderer
                 var paragraph = cell.OfType<ParagraphBlock>().FirstOrDefault();
                 if (paragraph?.Inline is null) continue;
 
-                var runs = inlineRenderer.GetTextRuns(paragraph.Inline, LayoutConstants.BodyFontSize);
+                var runs = inlineRenderer.GetTextRuns(paragraph.Inline, context.Layout.BodyFontSize, context.Layout);
                 var textWidth = 0.0;
 
                 foreach (var run in runs)
@@ -154,7 +154,7 @@ public class TableRenderer
                     textWidth += context.Graphics.MeasureString(run.Text, font).Width;
                 }
 
-                var cellWidth = textWidth + (2 * LayoutConstants.TableCellPadding);
+                var cellWidth = textWidth + (2 * context.Layout.TableCellPaddingH);
                 widths[col] = Math.Max(widths[col], cellWidth);
             }
         }

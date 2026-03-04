@@ -14,7 +14,7 @@ public class ThematicBreakRenderer
         var height = MeasureHeight(thematicBreak, context);
         context.EnsureSpace(height);
 
-        var pen = new XPen(XColors.Black, LayoutConstants.HorizontalRuleThickness);
+        var pen = new XPen(XColors.Black, context.Layout.HorizontalRuleThickness);
         var y = context.CurrentY + (height / 2);
         context.Graphics.DrawLine(pen, context.ContentLeft, y, context.ContentRight, y);
 
@@ -22,6 +22,6 @@ public class ThematicBreakRenderer
     }
 
     public double MeasureHeight(ThematicBreakBlock thematicBreak, RenderContext context) =>
-        LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier
-        + LayoutConstants.ParagraphSpacing;
+        context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier
+        + context.Layout.ParagraphSpacing;
 }

@@ -3,59 +3,64 @@ using PdfSharp.Drawing;
 namespace WS.MarkdownToPdf.Layout;
 
 /// <summary>
-/// Layout constants for the PDF renderer. All values are in points unless stated otherwise.
+/// Provides static access to the default <see cref="LayoutOptions"/> values.
+/// Kept for backward compatibility — all rendering code reads from
+/// the <see cref="LayoutOptions"/> instance on <c>RenderContext</c>.
 /// </summary>
 public static class LayoutConstants
 {
-    // Page
-    public const double PageWidthMm = 210;
-    public const double PageHeightMm = 297;
-    public const double MarginMm = 20;
+    /// <summary>
+    /// The default layout options instance used when no custom options are supplied.
+    /// </summary>
+    public static LayoutOptions Default { get; } = new();
 
-    public static readonly double PageWidth = XUnit.FromMillimeter(PageWidthMm).Point;
-    public static readonly double PageHeight = XUnit.FromMillimeter(PageHeightMm).Point;
-    public static readonly double Margin = XUnit.FromMillimeter(MarginMm).Point;
-    public static readonly double ContentWidth = PageWidth - (2 * Margin);
-    public static readonly double ContentHeight = PageHeight - (2 * Margin);
+    // Page
+    public static double PageWidthMm => Default.PageWidthMm;
+    public static double PageHeightMm => Default.PageHeightMm;
+    public static double MarginMm => Default.MarginMm;
+    public static double PageWidth => Default.PageWidth;
+    public static double PageHeight => Default.PageHeight;
+    public static double Margin => Default.Margin;
+    public static double ContentWidth => Default.ContentWidth;
+    public static double ContentHeight => Default.ContentHeight;
 
     // Body font
-    public const string BodyFontFamily = "Times New Roman";
-    public const string MonoFontFamily = "Courier New";
-    public const double BodyFontSize = 10;
+    public static string BodyFontFamily => Default.BodyFontFamily;
+    public static string MonoFontFamily => Default.MonoFontFamily;
+    public static double BodyFontSize => Default.BodyFontSize;
 
     // Heading font sizes
-    public static readonly double[] HeadingFontSizes = [20, 16, 14, 12, 10, 8];
-
-    /// <summary>
-    /// Returns the font size for a heading level (1–6).
-    /// </summary>
-    public static double GetHeadingFontSize(int level) =>
-        level >= 1 && level <= 6 ? HeadingFontSizes[level - 1] : BodyFontSize;
+    public static double[] HeadingFontSizes => Default.HeadingFontSizes;
+    public static double GetHeadingFontSize(int level) => Default.GetHeadingFontSize(level);
 
     // Spacing
-    public const double LineSpacingMultiplier = 1.2;
-    public const double ParagraphSpacing = 5;
+    public static double LineSpacingMultiplier => Default.LineSpacingMultiplier;
+    public static double ParagraphSpacing => Default.ParagraphSpacing;
 
     // Lists
-    public const double ListIndent = 20;
+    public static double ListIndent => Default.ListIndent;
+    public static double ListItemSpacing => Default.ListItemSpacing;
 
     // Block quotes
-    public const double BlockQuoteIndent = 20;
-    public const double BlockQuoteBarWidth = 2;
-    public const double BlockQuoteBarGap = 4;
-
-    // Lists
-    public const double ListItemSpacing = 2;
+    public static double BlockQuoteIndent => Default.BlockQuoteIndent;
+    public static double BlockQuoteBarWidth => Default.BlockQuoteBarWidth;
+    public static double BlockQuoteBarGap => Default.BlockQuoteBarGap;
+    public static XColor BlockQuoteBarColor => Default.BlockQuoteBarColor;
 
     // Tables
-    public const double TableCellPadding = 2;
+    public static double TableCellPaddingH => Default.TableCellPaddingH;
+    public static double TableCellPaddingV => Default.TableCellPaddingV;
+    public static double TableHeaderRuleThickness => Default.TableHeaderRuleThickness;
+
+    // Strikethrough
+    public static double StrikethroughOffsetRatio => Default.StrikethroughOffsetRatio;
 
     // Horizontal rule
-    public const double HorizontalRuleThickness = 0.5;
+    public static double HorizontalRuleThickness => Default.HorizontalRuleThickness;
 
     // Columns
-    public const double ColumnGutter = 14;
+    public static double ColumnGutter => Default.ColumnGutter;
 
     // Page numbers
-    public const double PageNumberFontSize = 8;
+    public static double PageNumberFontSize => Default.PageNumberFontSize;
 }

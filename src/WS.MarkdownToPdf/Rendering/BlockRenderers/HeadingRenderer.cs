@@ -18,13 +18,13 @@ public class HeadingRenderer
     /// </summary>
     public void Render(HeadingBlock heading, List<Block> blocks, int index, RenderContext context)
     {
-        var fontSize = LayoutConstants.GetHeadingFontSize(heading.Level);
-        var font = new XFont(LayoutConstants.BodyFontFamily, fontSize, XFontStyleEx.Bold);
+        var fontSize = context.Layout.GetHeadingFontSize(heading.Level);
+        var font = new XFont(context.Layout.BodyFontFamily, fontSize, XFontStyleEx.Bold);
         var headingHeight = MeasureHeight(heading, context);
 
         // Look ahead: heading must stay with the next block (skip in column layout
         // where the distribution algorithm handles page fitting)
-        var combinedHeight = headingHeight + LayoutConstants.ParagraphSpacing;
+        var combinedHeight = headingHeight + context.Layout.ParagraphSpacing;
         if (!context.IsInColumnLayout && index + 1 < blocks.Count)
         {
             combinedHeight += MeasureNextBlockHeight(blocks[index + 1], context);
@@ -32,16 +32,16 @@ public class HeadingRenderer
 
         context.EnsureSpace(combinedHeight);
 
-        var runs = inlineRenderer.GetTextRuns(heading.Inline!, fontSize);
+        var runs = inlineRenderer.GetTextRuns(heading.Inline!, fontSize, context.Layout);
         var lines = LineWrapper.WrapLines(runs, context.Graphics, context.ContentWidth);
-        var lineHeight = fontSize * LayoutConstants.LineSpacingMultiplier;
+        var lineHeight = fontSize * context.Layout.LineSpacingMultiplier;
 
         foreach (var line in lines)
         {
             var currentX = context.ContentLeft;
             foreach (var run in line)
             {
-                var runFont = new XFont(LayoutConstants.BodyFontFamily, fontSize, run.Font.Style);
+                var runFont = new XFont(context.Layout.BodyFontFamily, fontSize, run.Font.Style);
                 context.Graphics.DrawString(
                     run.Text,
                     runFont,
@@ -54,20 +54,20 @@ public class HeadingRenderer
             context.CurrentY += lineHeight;
         }
 
-        context.CurrentY += LayoutConstants.ParagraphSpacing;
+        context.CurrentY += context.Layout.ParagraphSpacing;
     }
 
     public double MeasureHeight(HeadingBlock heading, RenderContext context)
     {
-        var fontSize = LayoutConstants.GetHeadingFontSize(heading.Level);
-        var lineHeight = fontSize * LayoutConstants.LineSpacingMultiplier;
+        var fontSize = context.Layout.GetHeadingFontSize(heading.Level);
+        var lineHeight = fontSize * context.Layout.LineSpacingMultiplier;
 
         if (heading.Inline is null)
-            return lineHeight + LayoutConstants.ParagraphSpacing;
+            return lineHeight + context.Layout.ParagraphSpacing;
 
-        var runs = inlineRenderer.GetTextRuns(heading.Inline, fontSize);
+        var runs = inlineRenderer.GetTextRuns(heading.Inline, fontSize, context.Layout);
         var lines = LineWrapper.WrapLines(runs, context.Graphics, context.ContentWidth);
-        return lines.Count * lineHeight + LayoutConstants.ParagraphSpacing;
+        return lines.Count * lineHeight + context.Layout.ParagraphSpacing;
     }
 
     private double MeasureNextBlockHeight(Block nextBlock, RenderContext context) =>

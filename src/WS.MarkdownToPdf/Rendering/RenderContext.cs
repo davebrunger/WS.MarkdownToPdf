@@ -14,15 +14,16 @@ public class RenderContext
     private double? columnWidth;
 
     public PdfDocument Document { get; }
+    public LayoutOptions Layout { get; }
     public PdfPage CurrentPage { get; private set; }
     public XGraphics Graphics { get; private set; }
     public double CurrentY { get; set; }
 
-    public double ContentLeft => columnLeft ?? LayoutConstants.Margin;
+    public double ContentLeft => columnLeft ?? Layout.Margin;
     public double ContentRight => ContentLeft + ContentWidth;
-    public double ContentWidth => columnWidth ?? LayoutConstants.ContentWidth;
-    public double ContentTop => LayoutConstants.Margin;
-    public double ContentBottom => LayoutConstants.PageHeight - LayoutConstants.Margin;
+    public double ContentWidth => columnWidth ?? Layout.ContentWidth;
+    public double ContentTop => Layout.Margin;
+    public double ContentBottom => Layout.PageHeight - Layout.Margin;
     public double RemainingHeight => ContentBottom - CurrentY;
 
     /// <summary>
@@ -30,9 +31,10 @@ public class RenderContext
     /// </summary>
     public bool IsInColumnLayout => columnLeft.HasValue;
 
-    public RenderContext(PdfDocument document)
+    public RenderContext(PdfDocument document, LayoutOptions? layout = null)
     {
         Document = document;
+        Layout = layout ?? LayoutConstants.Default;
         CurrentPage = AddNewPage();
         Graphics = XGraphics.FromPdfPage(CurrentPage);
         CurrentY = ContentTop;
@@ -63,8 +65,8 @@ public class RenderContext
     private PdfPage AddNewPage()
     {
         var page = Document.AddPage();
-        page.Width = XUnit.FromMillimeter(LayoutConstants.PageWidthMm);
-        page.Height = XUnit.FromMillimeter(LayoutConstants.PageHeightMm);
+        page.Width = XUnit.FromMillimeter(Layout.PageWidthMm);
+        page.Height = XUnit.FromMillimeter(Layout.PageHeightMm);
         return page;
     }
 

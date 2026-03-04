@@ -1,0 +1,73 @@
+using PdfSharp.Drawing;
+
+namespace WS.MarkdownToPdf.Layout;
+
+/// <summary>
+/// Configurable layout options for the PDF renderer.
+/// All distance values are in points unless stated otherwise.
+/// Create with object initializer syntax to override any defaults:
+/// <code>
+/// var options = new LayoutOptions { BodyFontSize = 12, MarginMm = 25 };
+/// </code>
+/// </summary>
+public class LayoutOptions
+{
+    // Page
+    public double PageWidthMm { get; init; } = 210;
+    public double PageHeightMm { get; init; } = 297;
+    public double MarginMm { get; init; } = 20;
+
+    // Computed page dimensions (in points)
+    public double PageWidth => XUnit.FromMillimeter(PageWidthMm).Point;
+    public double PageHeight => XUnit.FromMillimeter(PageHeightMm).Point;
+    public double Margin => XUnit.FromMillimeter(MarginMm).Point;
+    public double ContentWidth => PageWidth - (2 * Margin);
+    public double ContentHeight => PageHeight - (2 * Margin);
+
+    // Body font
+    public string BodyFontFamily { get; init; } = "Times New Roman";
+    public string MonoFontFamily { get; init; } = "Courier New";
+    public double BodyFontSize { get; init; } = 10;
+
+    // Heading font sizes (index 0 = H1, … index 5 = H6)
+    public double[] HeadingFontSizes { get; init; } = [20, 16, 14, 12, 10, 8];
+
+    /// <summary>
+    /// Returns the font size for a heading level (1–6).
+    /// </summary>
+    public double GetHeadingFontSize(int level) =>
+        level >= 1 && level <= HeadingFontSizes.Length
+            ? HeadingFontSizes[level - 1]
+            : BodyFontSize;
+
+    // Spacing
+    public double LineSpacingMultiplier { get; init; } = 1.2;
+    public double ParagraphSpacing { get; init; } = 5;
+
+    // Lists
+    public double ListIndent { get; init; } = 20;
+    public double ListItemSpacing { get; init; } = 2;
+
+    // Block quotes
+    public double BlockQuoteIndent { get; init; } = 20;
+    public double BlockQuoteBarWidth { get; init; } = 2;
+    public double BlockQuoteBarGap { get; init; } = 4;
+    public XColor BlockQuoteBarColor { get; init; } = XColors.LightGray;
+
+    // Tables
+    public double TableCellPaddingH { get; init; } = 4;
+    public double TableCellPaddingV { get; init; } = 2;
+    public double TableHeaderRuleThickness { get; init; } = 0.5;
+
+    // Strikethrough
+    public double StrikethroughOffsetRatio { get; init; } = 0.35;
+
+    // Horizontal rule
+    public double HorizontalRuleThickness { get; init; } = 0.5;
+
+    // Columns
+    public double ColumnGutter { get; init; } = 14;
+
+    // Page numbers
+    public double PageNumberFontSize { get; init; } = 8;
+}

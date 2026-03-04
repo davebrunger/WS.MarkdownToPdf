@@ -1,5 +1,6 @@
 using Markdig.Syntax;
 using PdfSharp.Pdf;
+using WS.MarkdownToPdf.Layout;
 
 namespace WS.MarkdownToPdf.Rendering;
 
@@ -11,5 +12,5 @@ public interface IPdfRenderer
     /// <summary>
     /// Renders the given Markdown AST and returns a PDF document.
     /// </summary>
-    PdfDocument Render(MarkdownDocument document);
+    PdfDocument Render(MarkdownDocument document, LayoutOptions? layout = null);
 }

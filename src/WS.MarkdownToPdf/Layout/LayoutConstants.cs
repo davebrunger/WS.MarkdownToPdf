@@ -1,5 +1,3 @@
-using PdfSharp.Drawing;
-
 namespace WS.MarkdownToPdf.Layout;
 
 /// <summary>
@@ -45,7 +43,7 @@ public static class LayoutConstants
     public static double BlockQuoteIndent => Default.BlockQuoteIndent;
     public static double BlockQuoteBarWidth => Default.BlockQuoteBarWidth;
     public static double BlockQuoteBarGap => Default.BlockQuoteBarGap;
-    public static XColor BlockQuoteBarColor => Default.BlockQuoteBarColor;
+    public static string BlockQuoteBarColor => Default.BlockQuoteBarColor;
 
     // Tables
     public static double TableCellPaddingH => Default.TableCellPaddingH;

@@ -1,5 +1,3 @@
-using PdfSharp.Drawing;
-
 namespace WS.MarkdownToPdf.Layout;
 
 /// <summary>
@@ -17,10 +15,11 @@ public class LayoutOptions
     public double PageHeightMm { get; init; } = 297;
     public double MarginMm { get; init; } = 20;
 
-    // Computed page dimensions (in points)
-    public double PageWidth => XUnit.FromMillimeter(PageWidthMm).Point;
-    public double PageHeight => XUnit.FromMillimeter(PageHeightMm).Point;
-    public double Margin => XUnit.FromMillimeter(MarginMm).Point;
+    // Computed page dimensions (in points). 1 mm = 72 / 25.4 pt.
+    private const double PointsPerMm = 72.0 / 25.4;
+    public double PageWidth => PageWidthMm * PointsPerMm;
+    public double PageHeight => PageHeightMm * PointsPerMm;
+    public double Margin => MarginMm * PointsPerMm;
     public double ContentWidth => PageWidth - (2 * Margin);
     public double ContentHeight => PageHeight - (2 * Margin);
 
@@ -52,7 +51,11 @@ public class LayoutOptions
     public double BlockQuoteIndent { get; init; } = 20;
     public double BlockQuoteBarWidth { get; init; } = 2;
     public double BlockQuoteBarGap { get; init; } = 4;
-    public XColor BlockQuoteBarColor { get; init; } = XColors.LightGray;
+
+    /// <summary>
+    /// Hex colour string for the block-quote left bar (e.g. "#D3D3D3").
+    /// </summary>
+    public string BlockQuoteBarColor { get; init; } = "#D3D3D3";
 
     // Tables
     public double TableCellPaddingH { get; init; } = 4;
@@ -70,4 +73,7 @@ public class LayoutOptions
 
     // Page numbers
     public double PageNumberFontSize { get; init; } = 8;
+
+    // Computed page dimensions (in mm → points) use PdfSharp's XUnit internally,
+    // but callers never need to reference PdfSharp types.
 }

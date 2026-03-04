@@ -23,7 +23,7 @@ public class QuoteBlockRenderer
 
         var barX = context.ContentLeft + context.Layout.BlockQuoteBarGap;
         var textX = context.ContentLeft + context.Layout.BlockQuoteIndent;
-        var barPen = new XPen(context.Layout.BlockQuoteBarColor, context.Layout.BlockQuoteBarWidth);
+        var barPen = new XPen(ParseHexColor(context.Layout.BlockQuoteBarColor), context.Layout.BlockQuoteBarWidth);
         var lineHeight = context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier;
         var availableWidth = context.ContentWidth - context.Layout.BlockQuoteIndent;
 
@@ -98,6 +98,15 @@ public class QuoteBlockRenderer
     /// </summary>
     private static List<TextRun> PromoteSoftLineBreaks(List<TextRun> runs) =>
         runs.Select(r => r.IsSoftLineBreak ? r with { IsSoftLineBreak = false, IsLineBreak = true } : r).ToList();
+
+    private static XColor ParseHexColor(string hex)
+    {
+        var span = hex.AsSpan().TrimStart('#');
+        var r = byte.Parse(span[..2], System.Globalization.NumberStyles.HexNumber);
+        var g = byte.Parse(span[2..4], System.Globalization.NumberStyles.HexNumber);
+        var b = byte.Parse(span[4..6], System.Globalization.NumberStyles.HexNumber);
+        return XColor.FromArgb(r, g, b);
+    }
 
     private static void ValidateSingleLevel(QuoteBlock quote)
     {

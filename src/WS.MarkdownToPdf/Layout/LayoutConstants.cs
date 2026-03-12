@@ -28,7 +28,6 @@ public static class LayoutConstants
     public static double BodyFontSize => Default.BodyFontSize;
 
     // Heading font sizes
-    public static double[] HeadingFontSizes => Default.HeadingFontSizes;
     public static double GetHeadingFontSize(int level) => Default.GetHeadingFontSize(level);
 
     // Spacing

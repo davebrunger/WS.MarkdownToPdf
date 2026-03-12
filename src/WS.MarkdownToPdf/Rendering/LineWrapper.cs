@@ -108,4 +108,131 @@ public static class LineWrapper
 
         return segments;
     }
+
+    /// <summary>
+    /// Wraps text runs preferring to break on ", " (comma-space) boundaries.
+    /// Pass 1: wrap treating each comma-delimited clause as an atomic segment.
+    /// Pass 2: re-wrap any lines that are still too wide using normal word-breaking.
+    /// </summary>
+    public static List<List<TextRun>> WrapLinesPreferCommaBreak(
+        List<TextRun> runs, XGraphics graphics, double availableWidth)
+    {
+        // Pass 1: wrap on ", " boundaries only
+        var commaLines = WrapLinesWithSegmenter(runs, graphics, availableWidth, SplitOnCommaOnly);
+
+        // Pass 2: re-wrap any overflow lines using normal space-breaking
+        var result = new List<List<TextRun>>();
+        foreach (var line in commaLines)
+        {
+            var lineWidth = line.Sum(r => graphics.MeasureString(r.Text, r.Font).Width);
+            if (lineWidth > availableWidth)
+            {
+                result.AddRange(WrapLines(line, graphics, availableWidth));
+            }
+            else
+            {
+                result.Add(line);
+            }
+        }
+
+        if (result.Count == 0)
+            result.Add([]);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Core wrapping engine that accepts a custom segmenter function.
+    /// </summary>
+    private static List<List<TextRun>> WrapLinesWithSegmenter(
+        List<TextRun> runs, XGraphics graphics, double availableWidth,
+        Func<string, List<string>> segmenter)
+    {
+        var lines = new List<List<TextRun>>();
+        var currentLine = new List<TextRun>();
+        var currentLineWidth = 0.0;
+
+        foreach (var run in runs)
+        {
+            if (run.IsLineBreak)
+            {
+                lines.Add(currentLine);
+                currentLine = [];
+                currentLineWidth = 0;
+                continue;
+            }
+
+            var segments = segmenter(run.Text);
+
+            if (segments.Count == 0)
+                continue;
+
+            var accumulated = "";
+
+            foreach (var segment in segments)
+            {
+                var testText = accumulated + segment;
+                var testWidth = graphics.MeasureString(testText, run.Font).Width;
+
+                if (currentLineWidth + testWidth > availableWidth
+                    && (currentLine.Count > 0 || accumulated.Length > 0))
+                {
+                    if (accumulated.Length > 0)
+                    {
+                        currentLine.Add(run with { Text = accumulated.TrimEnd() });
+                    }
+
+                    lines.Add(currentLine);
+                    currentLine = [];
+                    currentLineWidth = 0;
+                    accumulated = segment.TrimStart();
+                }
+                else
+                {
+                    accumulated = testText;
+                }
+            }
+
+            if (accumulated.Length > 0)
+            {
+                var width = graphics.MeasureString(accumulated, run.Font).Width;
+                currentLine.Add(run with { Text = accumulated });
+                currentLineWidth += width;
+            }
+        }
+
+        if (currentLine.Count > 0)
+            lines.Add(currentLine);
+
+        if (lines.Count == 0)
+            lines.Add([]);
+
+        return lines;
+    }
+
+    /// <summary>
+    /// Splits text on ", " boundaries only, keeping the delimiter with the preceding segment.
+    /// "A, B, C" → ["A, ", "B, ", "C"]
+    /// </summary>
+    private static List<string> SplitOnCommaOnly(string text)
+    {
+        var parts = new List<string>();
+        var startIndex = 0;
+
+        while (startIndex < text.Length)
+        {
+            var delimIndex = text.IndexOf(", ", startIndex, StringComparison.Ordinal);
+            if (delimIndex < 0)
+            {
+                parts.Add(text[startIndex..]);
+                break;
+            }
+
+            var endIndex = delimIndex + 2;
+            parts.Add(text[startIndex..endIndex]);
+            startIndex = endIndex;
+        }
+
+        return parts;
+    }
 }

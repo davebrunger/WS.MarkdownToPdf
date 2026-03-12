@@ -18,6 +18,7 @@
         "Start-Process": true,
         "Push-Location": true,
         "Move-Item": true,
-        "Pop-Location": true
+        "Pop-Location": true,
+        "dotnet add": true
     }
 }

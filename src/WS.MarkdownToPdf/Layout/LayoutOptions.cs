@@ -28,15 +28,15 @@ public class LayoutOptions
     public string MonoFontFamily { get; init; } = "Courier New";
     public double BodyFontSize { get; init; } = 10;
 
-    // Heading font sizes (index 0 = H1, … index 5 = H6)
-    public double[] HeadingFontSizes { get; init; } = [20, 16, 14, 12, 10, 8];
+    // Heading font sizes — ratios relative to body font size (H1 … H6)
+    private static readonly double[] HeadingRatios = [2.0, 1.6, 1.4, 1.2, 1.0, 0.8];
 
     /// <summary>
-    /// Returns the font size for a heading level (1–6).
+    /// Returns the font size for a heading level (1–6), scaled from <see cref="BodyFontSize"/>.
     /// </summary>
     public double GetHeadingFontSize(int level) =>
-        level >= 1 && level <= HeadingFontSizes.Length
-            ? HeadingFontSizes[level - 1]
+        level >= 1 && level <= HeadingRatios.Length
+            ? BodyFontSize * HeadingRatios[level - 1]
             : BodyFontSize;
 
     // Spacing

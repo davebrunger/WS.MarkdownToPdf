@@ -8,16 +8,16 @@ A .NET 10 library that converts Markdown documents to PDF using [Markdig](https:
 
 | Element | Syntax | Notes |
 |---|---|---|
-| Headings | `# H1` through `###### H6` | Scaled font sizes (20 → 8 pt) |
+| Headings | `# H1` through `###### H6` | Scaled from body size (×2.0 → ×0.8) |
 | Bold | `**text**` | |
 | Italic | `*text*` | |
 | Strikethrough | `~~text~~` | |
 | Inline code | `` `code` `` | Rendered in Courier New |
-| Paragraphs | Plain text | Body text in Times New Roman 12 pt |
+| Paragraphs | Plain text | Body text in Times New Roman 10 pt |
 | Bullet lists | `- item` | Single-level |
 | Ordered lists | `1. item` | Single-level |
 | Block quotes | `> text` | Grey left bar, indented, single-level |
-| Tables | Pipe tables | Equal-width columns, bold header row |
+| Tables | Pipe tables | Auto-sized columns with text wrapping, bold header row |
 | Thematic breaks | `---` | Horizontal rule |
 | Multi-column layout | `<!-- columns: N -->` | 2+ columns via HTML comments |
 
@@ -41,8 +41,12 @@ Add a project reference (not yet published as a NuGet package):
 
 ```csharp
 using WS.MarkdownToPdf;
+using WS.MarkdownToPdf.Layout;
 
 var converter = new MarkdownToPdfConverter();
+
+// With custom font size (heading sizes scale automatically)
+var custom = new MarkdownToPdfConverter(new LayoutOptions { BodyFontSize = 12 });
 
 // Markdown string → PDF file
 converter.ConvertFile("input.md", "output.pdf");
@@ -106,7 +110,7 @@ Below is a quick reference of what you can include in your Markdown and how it a
 Regular text, **bold**, *italic*, ~~strikethrough~~, and `inline code`.
 ```
 
-**Headings** (levels 1–6, rendered at 24 → 10 pt)
+**Headings** (levels 1–6, scaled from body font size using ratios 2.0× → 0.8×)
 
 ```markdown
 # Heading 1
@@ -130,7 +134,7 @@ Regular text, **bold**, *italic*, ~~strikethrough~~, and `inline code`.
 > Important note displayed with a grey bar.
 ```
 
-**Tables** (pipe-table syntax, equal-width columns)
+**Tables** (pipe-table syntax, auto-sized columns with text wrapping)
 
 ```markdown
 | Name  | Value |
@@ -238,6 +242,7 @@ catch (UnsupportedMarkdownException ex)
 | Page size | A4 (210 × 297 mm) |
 | Margins | 20 mm on all sides |
 | Body font | Times New Roman 10 pt |
+| Heading sizes | Scaled from body size (H1 = 2×, H2 = 1.6×, H3 = 1.4×, H4 = 1.2×, H5 = 1×, H6 = 0.8×) |
 | Mono font | Courier New (inline code) |
 | Line spacing | 1.2× |
 | Paragraph spacing | 5 pt |
@@ -258,13 +263,14 @@ A CLI tool (`SampleGenerator`) is included for quick Markdown-to-PDF conversion 
 ### Running
 
 ```powershell
-dotnet run --project tools/SampleGenerator -- <input> <output>
+dotnet run --project tools/SampleGenerator -- [<input> [<output>]] [options]
 ```
 
-| Argument | Position | Default | Description |
+| Argument / Option | Position | Default | Description |
 |---|---|---|---|
 | `input` | 1st | `sample.md` | Path to the Markdown file to convert |
 | `output` | 2nd | `sample.pdf` | Path for the generated PDF |
+| `--font-size`, `-f` | — | `10` | Body font size in points. Heading sizes scale automatically (H1 = 2×, H2 = 1.6×, … H6 = 0.8×). |
 
 Both arguments are positional and optional.
 
@@ -274,6 +280,12 @@ Convert a specific file:
 
 ```powershell
 dotnet run --project tools/SampleGenerator -- docs/report.md docs/report.pdf
+```
+
+Convert with a larger font size:
+
+```powershell
+dotnet run --project tools/SampleGenerator -- report.md report.pdf --font-size 12
 ```
 
 Use defaults (reads `sample.md`, writes `sample.pdf`):
@@ -320,7 +332,7 @@ MarkdownToPdfConverter          # Public API entry point
         └── InlineRenderer      # Resolves bold/italic/strikethrough/code runs
 ```
 
-Layout constants (page size, margins, fonts, spacing) are centralised in `LayoutConstants`. Font initialisation is handled by `FontSetup`, which delegates to `SystemFontResolver` on non-Windows platforms.
+Layout options (page size, margins, fonts, spacing) are centralised in `LayoutOptions` (with static defaults in `LayoutConstants`). Font initialisation is handled by `FontSetup`, which delegates to `SystemFontResolver` on non-Windows platforms.
 
 Unsupported Markdown elements (e.g. fenced code blocks, images, nested lists) throw `UnsupportedMarkdownException` at render time.
 

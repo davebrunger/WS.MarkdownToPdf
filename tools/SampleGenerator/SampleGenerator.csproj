@@ -8,4 +8,8 @@
     <ProjectReference Include="..\..\src\WS.MarkdownToPdf\WS.MarkdownToPdf.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="3.0.0-preview.2.26159.112" />
+  </ItemGroup>
+
 </Project>

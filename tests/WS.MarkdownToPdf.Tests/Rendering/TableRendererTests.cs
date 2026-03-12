@@ -83,4 +83,55 @@ public class TableRendererTests
         pdf.Save(stream, false);
         Assert.True(stream.Length > 0);
     }
+
+    [Fact]
+    public void Render_WideTable_WrapsTextAndIncreasesRowHeight()
+    {
+        // Build a table wide enough to exceed the default content width (~481 pt).
+        // Each column has long text that will need wrapping once columns are scaled.
+        var markdown = "| Name | Description | Details | Extra |\n"
+                     + "|------|-------------|---------|-------|\n"
+                     + "| Colt 1903 Pocket Hammerless | A compact semi-automatic pistol chambered in 32 ACP | Manufactured by Colt from 1903 to 1945 with many variants | Hard to Find, Very Rare |";
+        var doc = parser.Parse(markdown);
+        var table = doc.Descendants<Table>().Single();
+
+        using var pdfDoc = new PdfDocument();
+        var context = new RenderContext(pdfDoc);
+        var initialY = context.CurrentY;
+
+        var tableRenderer = new TableRenderer();
+        tableRenderer.Render(table, context);
+
+        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
+        var singleRowHeight = lineHeight + 2 * LayoutConstants.TableCellPaddingV;
+
+        // With wrapping, at least one data row should be taller than a single line
+        var totalAdvance = context.CurrentY - initialY;
+        var minWithoutWrapping = 2 * singleRowHeight + LayoutConstants.ParagraphSpacing;
+        Assert.True(totalAdvance > minWithoutWrapping,
+            $"Expected wrapped table to be taller than {minWithoutWrapping:F1} pt but got {totalAdvance:F1} pt");
+    }
+
+    [Fact]
+    public void MeasureHeight_WideTable_AccountsForWrapping()
+    {
+        var markdown = "| Name | Description | Details | Extra |\n"
+                     + "|------|-------------|---------|-------|\n"
+                     + "| Colt 1903 Pocket Hammerless | A compact semi-automatic pistol chambered in 32 ACP | Manufactured by Colt from 1903 to 1945 with many variants | Hard to Find, Very Rare |";
+        var doc = parser.Parse(markdown);
+        var table = doc.Descendants<Table>().Single();
+
+        using var pdfDoc = new PdfDocument();
+        var context = new RenderContext(pdfDoc);
+
+        var tableRenderer = new TableRenderer();
+        var measuredHeight = tableRenderer.MeasureHeight(table, context);
+
+        var lineHeight = LayoutConstants.BodyFontSize * LayoutConstants.LineSpacingMultiplier;
+        var singleRowHeight = lineHeight + 2 * LayoutConstants.TableCellPaddingV;
+        var minWithoutWrapping = 2 * singleRowHeight + LayoutConstants.ParagraphSpacing;
+
+        Assert.True(measuredHeight > minWithoutWrapping,
+            $"Expected measured height {measuredHeight:F1} to exceed non-wrapped height {minWithoutWrapping:F1}");
+    }
 }

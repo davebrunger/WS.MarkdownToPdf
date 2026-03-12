@@ -1,9 +1,29 @@
+using System.CommandLine;
 using WS.MarkdownToPdf;
+using WS.MarkdownToPdf.Layout;
 
-var inputPath = args.Length > 0 ? args[0] : "sample.md";
-var outputPath = args.Length > 1 ? args[1] : "sample.pdf";
+var inputArg = new Argument<FileInfo>("input") { Description = "Markdown file to convert", DefaultValueFactory = _ => new FileInfo("sample.md") };
+var outputArg = new Argument<FileInfo>("output") { Description = "PDF output path", DefaultValueFactory = _ => new FileInfo("sample.pdf") };
+var fontSizeOption = new Option<double>("--font-size", "-f") { Description = "Body font size in points", DefaultValueFactory = _ => 10 };
 
-var converter = new MarkdownToPdfConverter();
-converter.ConvertFile(inputPath, outputPath);
+var rootCommand = new RootCommand("Converts Markdown files to PDF")
+{
+    inputArg,
+    outputArg,
+    fontSizeOption
+};
 
-Console.WriteLine($"PDF generated: {Path.GetFullPath(outputPath)}");
+rootCommand.SetAction(parseResult =>
+{
+    var input = parseResult.GetValue(inputArg)!;
+    var output = parseResult.GetValue(outputArg)!;
+    var fontSize = parseResult.GetValue(fontSizeOption);
+
+    var options = new LayoutOptions { BodyFontSize = fontSize };
+    var converter = new MarkdownToPdfConverter(options);
+    converter.ConvertFile(input.FullName, output.FullName);
+
+    Console.WriteLine($"PDF generated: {Path.GetFullPath(output.FullName)}");
+});
+
+return await rootCommand.Parse(args).InvokeAsync();

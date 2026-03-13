@@ -41,31 +41,17 @@ public class ListRenderer
                 var runs = inlineRenderer.GetTextRuns(paragraph.Inline, context.Layout.BodyFontSize, context.Layout);
                 var availableWidth = context.ContentWidth - prefixWidth;
                 var lines = LineWrapper.WrapLines(runs, context.Graphics, availableWidth);
+                LineHyphenator.HyphenateIfNeeded(lines, context.Graphics, availableWidth, context.Layout);
                 var textX = context.ContentLeft + prefixWidth;
 
                 for (var lineIndex = 0; lineIndex < lines.Count; lineIndex++)
                 {
-                    var currentX = textX;
-                    foreach (var run in lines[lineIndex])
-                    {
-                        context.Graphics.DrawString(
-                            run.Text,
-                            run.Font,
-                            XBrushes.Black,
-                            new XPoint(currentX, context.CurrentY + run.Font.Size));
-
-                        if (run.IsStrikethrough)
-                        {
-                            var size = context.Graphics.MeasureString(run.Text, run.Font);
-                            var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * context.Layout.StrikethroughOffsetRatio);
-                            context.Graphics.DrawLine(
-                                XPens.Black,
-                                currentX, strikeY,
-                                currentX + size.Width, strikeY);
-                        }
-
-                        currentX += context.Graphics.MeasureString(run.Text, run.Font).Width;
-                    }
+                    var isLastLine = lineIndex == lines.Count - 1;
+                    JustifiedLineDrawer.DrawLine(
+                        lines[lineIndex], context.Graphics,
+                        textX, context.CurrentY,
+                        availableWidth, context.Layout,
+                        justify: !isLastLine);
 
                     context.CurrentY += lineHeight;
                 }

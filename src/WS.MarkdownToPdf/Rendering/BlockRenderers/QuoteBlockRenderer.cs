@@ -40,31 +40,18 @@ public class QuoteBlockRenderer
 
             var runs = inlineRenderer.GetTextRuns(child.Inline, context.Layout.BodyFontSize, context.Layout);
             runs = PromoteSoftLineBreaks(runs);
-            var lines = LineWrapper.WrapLines(runs, context.Graphics, availableWidth);
+            var lines = LineWrapper.WrapLines(runs, context.Graphics, availableWidth, out var hardBreakLines);
+            LineHyphenator.HyphenateIfNeeded(lines, context.Graphics, availableWidth, context.Layout);
 
-            foreach (var line in lines)
+            for (var lineIndex = 0; lineIndex < lines.Count; lineIndex++)
             {
-                var currentX = textX;
-                foreach (var run in line)
-                {
-                    context.Graphics.DrawString(
-                        run.Text,
-                        run.Font,
-                        XBrushes.Black,
-                        new XPoint(currentX, context.CurrentY + run.Font.Size));
-
-                    if (run.IsStrikethrough)
-                    {
-                        var size = context.Graphics.MeasureString(run.Text, run.Font);
-                        var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * context.Layout.StrikethroughOffsetRatio);
-                        context.Graphics.DrawLine(
-                            XPens.Black,
-                            currentX, strikeY,
-                            currentX + size.Width, strikeY);
-                    }
-
-                    currentX += context.Graphics.MeasureString(run.Text, run.Font).Width;
-                }
+                var isLastLine = lineIndex == lines.Count - 1;
+                var isHardBreak = hardBreakLines.Contains(lineIndex);
+                JustifiedLineDrawer.DrawLine(
+                    lines[lineIndex], context.Graphics,
+                    textX, context.CurrentY,
+                    availableWidth, context.Layout,
+                    justify: !isLastLine && !isHardBreak);
 
                 context.CurrentY += lineHeight;
             }

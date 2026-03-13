@@ -13,7 +13,7 @@ public static class SystemFontScanner
     /// </summary>
     public static IReadOnlyList<string> GetInstalledFontFamilies()
     {
-        return ScanFontVariants().Keys.Order().ToList();
+        return ScanFontVariants().Keys.Order(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     /// <summary>

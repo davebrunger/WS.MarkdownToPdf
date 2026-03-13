@@ -88,4 +88,35 @@ public class LineWrapperTests
         Assert.Single(segments);
         Assert.Equal("hello", segments[0]);
     }
+
+    [Fact]
+    public void WrapLines_WithHardBreakTracking_ReportsBreakLines()
+    {
+        var font = new XFont(LayoutConstants.BodyFontFamily, LayoutConstants.BodyFontSize);
+        var runs = new List<TextRun>
+        {
+            new("Line one", font),
+            new("", font, IsLineBreak: true),
+            new("Line two", font)
+        };
+
+        var lines = LineWrapper.WrapLines(runs, graphics, LayoutConstants.ContentWidth, out var hardBreakLines);
+
+        Assert.Equal(2, lines.Count);
+        Assert.Contains(0, hardBreakLines);
+        Assert.DoesNotContain(1, hardBreakLines);
+    }
+
+    [Fact]
+    public void WrapLines_WordWrapOnly_NoHardBreakLines()
+    {
+        var font = new XFont(LayoutConstants.BodyFontFamily, LayoutConstants.BodyFontSize);
+        var longText = string.Join(" ", Enumerable.Repeat("word", 80));
+        var runs = new List<TextRun> { new(longText, font) };
+
+        var lines = LineWrapper.WrapLines(runs, graphics, LayoutConstants.ContentWidth, out var hardBreakLines);
+
+        Assert.True(lines.Count > 1);
+        Assert.Empty(hardBreakLines);
+    }
 }

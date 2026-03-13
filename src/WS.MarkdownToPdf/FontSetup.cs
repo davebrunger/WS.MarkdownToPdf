@@ -8,6 +8,7 @@ namespace WS.MarkdownToPdf;
 internal static class FontSetup
 {
     private static bool _initialized;
+    private static readonly object _lock = new();
 
     /// <summary>
     /// Registers the system font resolver. Safe to call multiple times.
@@ -15,8 +16,11 @@ internal static class FontSetup
     internal static void EnsureInitialized()
     {
         if (_initialized) return;
-        _initialized = true;
-
-        GlobalFontSettings.FontResolver = new Fonts.SystemFontResolver();
+        lock (_lock)
+        {
+            if (_initialized) return;
+            _initialized = true;
+            GlobalFontSettings.FontResolver = new Fonts.SystemFontResolver();
+        }
     }
 }

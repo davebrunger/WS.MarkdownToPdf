@@ -14,8 +14,17 @@ public static class LineWrapper
     /// Wraps text runs into lines that fit within <paramref name="availableWidth"/>.
     /// </summary>
     public static List<List<TextRun>> WrapLines(List<TextRun> runs, XGraphics graphics, double availableWidth)
+        => WrapLines(runs, graphics, availableWidth, out _);
+
+    /// <summary>
+    /// Wraps text runs into lines, also reporting which lines were terminated by an
+    /// explicit hard line break (as opposed to word-wrap).
+    /// </summary>
+    public static List<List<TextRun>> WrapLines(
+        List<TextRun> runs, XGraphics graphics, double availableWidth, out HashSet<int> hardBreakLines)
     {
         var lines = new List<List<TextRun>>();
+        hardBreakLines = [];
         var currentLine = new List<TextRun>();
         var currentLineWidth = 0.0;
 
@@ -23,6 +32,7 @@ public static class LineWrapper
         {
             if (run.IsLineBreak)
             {
+                hardBreakLines.Add(lines.Count);
                 lines.Add(currentLine);
                 currentLine = [];
                 currentLineWidth = 0;

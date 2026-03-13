@@ -17,35 +17,20 @@ public class ParagraphRenderer
         var runs = inlineRenderer.GetTextRuns(paragraph.Inline!, context.Layout.BodyFontSize, context.Layout);
         runs = FlattenSoftLineBreaks(runs);
         var lines = LineWrapper.WrapLines(runs, context.Graphics, context.ContentWidth);
+        LineHyphenator.HyphenateIfNeeded(lines, context.Graphics, context.ContentWidth, context.Layout);
         var lineHeight = context.Layout.BodyFontSize * context.Layout.LineSpacingMultiplier;
         var height = lines.Count * lineHeight + context.Layout.ParagraphSpacing;
 
         context.EnsureSpace(height);
 
-        foreach (var line in lines)
+        for (var lineIndex = 0; lineIndex < lines.Count; lineIndex++)
         {
-            var currentX = context.ContentLeft;
-            foreach (var run in line)
-            {
-                context.Graphics.DrawString(
-                    run.Text,
-                    run.Font,
-                    XBrushes.Black,
-                    new XPoint(currentX, context.CurrentY + run.Font.Size));
-
-                var runWidth = context.Graphics.MeasureString(run.Text, run.Font).Width;
-
-                if (run.IsStrikethrough)
-                {
-                    var strikeY = context.CurrentY + run.Font.Size - (run.Font.Size * context.Layout.StrikethroughOffsetRatio);
-                    context.Graphics.DrawLine(
-                        XPens.Black,
-                        currentX, strikeY,
-                        currentX + runWidth, strikeY);
-                }
-
-                currentX += runWidth;
-            }
+            var isLastLine = lineIndex == lines.Count - 1;
+            JustifiedLineDrawer.DrawLine(
+                lines[lineIndex], context.Graphics,
+                context.ContentLeft, context.CurrentY,
+                context.ContentWidth, context.Layout,
+                justify: !isLastLine);
 
             context.CurrentY += lineHeight;
         }

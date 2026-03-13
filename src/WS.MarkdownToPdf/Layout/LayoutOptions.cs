@@ -72,6 +72,13 @@ public class LayoutOptions
     // Strikethrough
     public double StrikethroughOffsetRatio { get; init; } = 0.35;
 
+    // Justification
+    /// <summary>
+    /// Maximum extra space (in points) added per word gap during full justification.
+    /// When exceeded, the next word is hyphenated to fill the line more tightly.
+    /// </summary>
+    public double MaxJustificationGap { get; init; } = 3;
+
     // Horizontal rule
     public double HorizontalRuleThickness { get; init; } = 0.5;
 

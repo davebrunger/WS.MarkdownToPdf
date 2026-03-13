@@ -65,8 +65,8 @@ public class RenderContext
     private PdfPage AddNewPage()
     {
         var page = Document.AddPage();
-        page.Width = XUnit.FromMillimeter(Layout.PageWidthMm);
-        page.Height = XUnit.FromMillimeter(Layout.PageHeightMm);
+        page.Width = XUnit.FromPoint(Layout.PageWidth);
+        page.Height = XUnit.FromPoint(Layout.PageHeight);
         return page;
     }
 

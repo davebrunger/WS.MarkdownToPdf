@@ -19,20 +19,20 @@ public class HeadingRenderer
     public void Render(HeadingBlock heading, List<Block> blocks, int index, RenderContext context)
     {
         var fontSize = context.Layout.GetHeadingFontSize(heading.Level);
-        var font = new XFont(context.Layout.BodyFontFamily, fontSize, XFontStyleEx.Bold);
+        var headingFamily = context.Layout.EffectiveHeadingFontFamily;
+        var font = new XFont(headingFamily, fontSize, XFontStyleEx.Bold);
         var headingHeight = MeasureHeight(heading, context);
 
-        // Look ahead: heading must stay with the next block (skip in column layout
-        // where the distribution algorithm handles page fitting)
+        // Look ahead: heading must stay with the next block
         var combinedHeight = headingHeight + context.Layout.ParagraphSpacing;
-        if (!context.IsInColumnLayout && index + 1 < blocks.Count)
+        if (index + 1 < blocks.Count)
         {
             combinedHeight += MeasureNextBlockHeight(blocks[index + 1], context);
         }
 
         context.EnsureSpace(combinedHeight);
 
-        var runs = inlineRenderer.GetTextRuns(heading.Inline!, fontSize, context.Layout);
+        var runs = inlineRenderer.GetTextRuns(heading.Inline!, fontSize, context.Layout, fontFamilyOverride: headingFamily);
         var lines = LineWrapper.WrapLines(runs, context.Graphics, context.ContentWidth);
         var lineHeight = fontSize * context.Layout.LineSpacingMultiplier;
 
@@ -41,7 +41,7 @@ public class HeadingRenderer
             var currentX = context.ContentLeft;
             foreach (var run in line)
             {
-                var runFont = new XFont(context.Layout.BodyFontFamily, fontSize, run.Font.Style);
+                var runFont = new XFont(headingFamily, fontSize, run.Font.Style);
                 context.Graphics.DrawString(
                     run.Text,
                     runFont,
@@ -65,7 +65,7 @@ public class HeadingRenderer
         if (heading.Inline is null)
             return lineHeight + context.Layout.ParagraphSpacing;
 
-        var runs = inlineRenderer.GetTextRuns(heading.Inline, fontSize, context.Layout);
+        var runs = inlineRenderer.GetTextRuns(heading.Inline, fontSize, context.Layout, fontFamilyOverride: context.Layout.EffectiveHeadingFontFamily);
         var lines = LineWrapper.WrapLines(runs, context.Graphics, context.ContentWidth);
         return lines.Count * lineHeight + context.Layout.ParagraphSpacing;
     }

@@ -3,21 +3,16 @@ using PdfSharp.Fonts;
 namespace WS.MarkdownToPdf.Fonts;
 
 /// <summary>
-/// Resolves fonts from the Windows system fonts directory for PDFsharp 6.x core package.
+/// Resolves fonts from system font directories for PDFsharp 6.x core package.
+/// Dynamically discovers installed TrueType fonts via <see cref="SystemFontScanner"/>.
 /// </summary>
 public class SystemFontResolver : IFontResolver
 {
-    private static readonly string FontsDir = Environment.GetFolderPath(Environment.SpecialFolder.Fonts);
-
-    private static readonly Dictionary<string, string[]> FontFiles = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["Times New Roman"] = ["times.ttf", "timesbd.ttf", "timesi.ttf", "timesbi.ttf"],
-        ["Courier New"] = ["cour.ttf", "courbd.ttf", "couri.ttf", "courbi.ttf"],
-    };
+    private readonly Dictionary<string, string?[]> _fontVariants = SystemFontScanner.ScanFontVariants();
 
     public FontResolverInfo? ResolveTypeface(string familyName, bool isBold, bool isItalic)
     {
-        if (!FontFiles.ContainsKey(familyName))
+        if (!_fontVariants.ContainsKey(familyName))
             return null;
 
         var index = (isBold ? 1 : 0) + (isItalic ? 2 : 0);
@@ -32,10 +27,13 @@ public class SystemFontResolver : IFontResolver
 
         var familyName = parts[0];
         if (!int.TryParse(parts[1], out var index)) return null;
-        if (!FontFiles.TryGetValue(familyName, out var files)) return null;
-        if (index < 0 || index >= files.Length) return null;
+        if (!_fontVariants.TryGetValue(familyName, out var variants)) return null;
+        if (index < 0 || index >= variants.Length) return null;
 
-        var path = Path.Combine(FontsDir, files[index]);
+        // Fall back to regular variant when the requested style is not available
+        var path = variants[index] ?? variants[0];
+        if (path is null) return null;
+
         return File.Exists(path) ? File.ReadAllBytes(path) : null;
     }
 }

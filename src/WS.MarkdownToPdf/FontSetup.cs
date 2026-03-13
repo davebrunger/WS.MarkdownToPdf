@@ -17,13 +17,6 @@ internal static class FontSetup
         if (_initialized) return;
         _initialized = true;
 
-        if (OperatingSystem.IsWindows())
-        {
-            GlobalFontSettings.UseWindowsFontsUnderWindows = true;
-        }
-        else
-        {
-            GlobalFontSettings.FontResolver = new Fonts.SystemFontResolver();
-        }
+        GlobalFontSettings.FontResolver = new Fonts.SystemFontResolver();
     }
 }

@@ -14,19 +14,26 @@ public class LayoutOptions
     public double PageWidthMm { get; init; } = 210;
     public double PageHeightMm { get; init; } = 297;
     public double MarginMm { get; init; } = 20;
+    public bool IsLandscape { get; init; }
 
     // Computed page dimensions (in points). 1 mm = 72 / 25.4 pt.
     private const double PointsPerMm = 72.0 / 25.4;
-    public double PageWidth => PageWidthMm * PointsPerMm;
-    public double PageHeight => PageHeightMm * PointsPerMm;
+    public double PageWidth => (IsLandscape ? PageHeightMm : PageWidthMm) * PointsPerMm;
+    public double PageHeight => (IsLandscape ? PageWidthMm : PageHeightMm) * PointsPerMm;
     public double Margin => MarginMm * PointsPerMm;
     public double ContentWidth => PageWidth - (2 * Margin);
     public double ContentHeight => PageHeight - (2 * Margin);
 
     // Body font
     public string BodyFontFamily { get; init; } = "Times New Roman";
+    public string? HeadingFontFamily { get; init; }
     public string MonoFontFamily { get; init; } = "Courier New";
     public double BodyFontSize { get; init; } = 10;
+
+    /// <summary>
+    /// Returns the heading font family, falling back to <see cref="BodyFontFamily"/> when not set.
+    /// </summary>
+    public string EffectiveHeadingFontFamily => HeadingFontFamily ?? BodyFontFamily;
 
     // Heading font sizes — ratios relative to body font size (H1 … H6)
     private static readonly double[] HeadingRatios = [2.0, 1.6, 1.4, 1.2, 1.0, 0.8];

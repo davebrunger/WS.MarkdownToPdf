@@ -299,6 +299,16 @@ public partial class PdfRenderer : IPdfRenderer
                 remainingTotalHeight += groups[k].TotalHeight;
 
             var availableHeight = context.RemainingHeight;
+
+            // If the first group to place won't fit and we're not already at the
+            // top of a fresh page, start a new page so columns get full height.
+            var firstGroupHeight = groups[groupIndex].TotalHeight;
+            if (firstGroupHeight > availableHeight && availableHeight < context.Layout.ContentHeight)
+            {
+                context.AddPage();
+                availableHeight = context.RemainingHeight;
+            }
+
             var balancedTarget = remainingTotalHeight / columnCount;
             var isBalancing = balancedTarget <= availableHeight;
             var columnTarget = isBalancing ? balancedTarget : availableHeight;
@@ -337,7 +347,7 @@ public partial class PdfRenderer : IPdfRenderer
                             currentHeight = 0;
                         }
                     }
-                    else if (!isBalancing)
+                    else if (!isBalancing || currentHeight + gh > availableHeight)
                     {
                         break;
                     }
@@ -366,9 +376,26 @@ public partial class PdfRenderer : IPdfRenderer
                 context.SetColumnLayout(colLeft, columnWidth);
                 context.CurrentY = startY;
 
+                // Build a flat block list so renderers can look ahead to neighbours
+                var flatBlocks = new List<Block>();
                 foreach (var item in columnBuckets[c])
                 {
-                    RenderColumnItem(item, context);
+                    if (!item.IsNestedSection)
+                        flatBlocks.Add(item.SingleBlock);
+                }
+
+                var flatIndex = 0;
+                foreach (var item in columnBuckets[c])
+                {
+                    if (item.IsNestedSection)
+                    {
+                        RenderNestedColumnSection(item.Blocks, item.NestedColumnCount, context);
+                    }
+                    else
+                    {
+                        RenderBlock(item.SingleBlock, flatBlocks, flatIndex, context);
+                        flatIndex++;
+                    }
                 }
 
                 if (context.CurrentY > maxY)

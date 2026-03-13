@@ -14,11 +14,11 @@ public class InlineRenderer
     /// <summary>
     /// Extracts styled text runs from the given inline container.
     /// </summary>
-    public List<TextRun> GetTextRuns(ContainerInline container, double baseFontSize, LayoutOptions? layout = null)
+    public List<TextRun> GetTextRuns(ContainerInline container, double baseFontSize, LayoutOptions? layout = null, string? fontFamilyOverride = null)
     {
         var runs = new List<TextRun>();
         var opts = layout ?? LayoutConstants.Default;
-        CollectRuns(container, baseFontSize, XFontStyleEx.Regular, false, opts, runs);
+        CollectRuns(container, baseFontSize, XFontStyleEx.Regular, false, opts, runs, fontFamilyOverride);
         return runs;
     }
 
@@ -28,14 +28,16 @@ public class InlineRenderer
         XFontStyleEx currentStyle,
         bool isStrikethrough,
         LayoutOptions layout,
-        List<TextRun> runs)
+        List<TextRun> runs,
+        string? fontFamilyOverride = null)
     {
+        var family = fontFamilyOverride ?? layout.BodyFontFamily;
         switch (inline)
         {
             case LiteralInline literal:
                 if (literal.Content.Length > 0)
                 {
-                    var font = new XFont(layout.BodyFontFamily, baseFontSize, currentStyle);
+                    var font = new XFont(family, baseFontSize, currentStyle);
                     runs.Add(new TextRun(literal.Content.ToString(), font, isStrikethrough));
                 }
                 break;
@@ -59,7 +61,7 @@ public class InlineRenderer
 
                 foreach (var child in emphasis)
                 {
-                    CollectRuns(child, baseFontSize, newStyle, newStrikethrough, layout, runs);
+                    CollectRuns(child, baseFontSize, newStyle, newStrikethrough, layout, runs, fontFamilyOverride);
                 }
                 break;
 
@@ -69,7 +71,7 @@ public class InlineRenderer
                 break;
 
             case LineBreakInline lineBreak:
-                var breakFont = new XFont(layout.BodyFontFamily, baseFontSize, currentStyle);
+                var breakFont = new XFont(family, baseFontSize, currentStyle);
                 if (lineBreak.IsHard)
                 {
                     runs.Add(new TextRun("", breakFont, IsLineBreak: true));

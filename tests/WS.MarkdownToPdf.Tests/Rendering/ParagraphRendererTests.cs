@@ -78,4 +78,50 @@ public class ParagraphRendererTests
         // Soft break joins text on same line (may word-wrap, but not forced two lines)
         Assert.Equal(initialY + singleLineAdvance, context.CurrentY, precision: 2);
     }
+
+    [Fact]
+    public void CountLines_ShortParagraph_ReturnsOne()
+    {
+        var doc = parser.Parse("Hello world");
+        var paragraph = doc.Descendants<ParagraphBlock>().First();
+
+        using var pdfDoc = new PdfDocument();
+        var context = new RenderContext(pdfDoc);
+        var sut = new WS.MarkdownToPdf.Rendering.BlockRenderers.ParagraphRenderer();
+
+        var count = sut.CountLines(paragraph, context);
+
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void CountLines_LongParagraph_ReturnsMultiple()
+    {
+        var longText = string.Join(" ", Enumerable.Repeat("word", 80));
+        var doc = parser.Parse(longText);
+        var paragraph = doc.Descendants<ParagraphBlock>().First();
+
+        using var pdfDoc = new PdfDocument();
+        var context = new RenderContext(pdfDoc);
+        var sut = new WS.MarkdownToPdf.Rendering.BlockRenderers.ParagraphRenderer();
+
+        var count = sut.CountLines(paragraph, context);
+
+        Assert.True(count > 1);
+    }
+
+    [Fact]
+    public void CountLines_NullInline_ReturnsOne()
+    {
+        // A ParagraphBlock with no inline content should return 1 line
+        var paragraph = new ParagraphBlock();
+
+        using var pdfDoc = new PdfDocument();
+        var context = new RenderContext(pdfDoc);
+        var sut = new WS.MarkdownToPdf.Rendering.BlockRenderers.ParagraphRenderer();
+
+        var count = sut.CountLines(paragraph, context);
+
+        Assert.Equal(1, count);
+    }
 }

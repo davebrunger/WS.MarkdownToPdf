@@ -94,4 +94,38 @@ public class QuoteBlockRendererTests
         Assert.Contains("line", ex.Message);
         Assert.Contains("column", ex.Message);
     }
+
+    [Theory]
+    [InlineData("#FF0000")]
+    [InlineData("#00FF00")]
+    [InlineData("#0000FF")]
+    [InlineData("AABBCC")]
+    public void ParseHexColor_ValidHex_RendersWithoutError(string hex)
+    {
+        // ParseHexColor is private, so test via rendering with a custom BarColor
+        var layout = new LayoutOptions { BlockQuoteBarColor = hex };
+        var doc = parser.Parse("> test");
+        var quote = doc.Descendants<QuoteBlock>().First();
+
+        using var pdfDoc = new PdfDocument();
+        var context = new RenderContext(pdfDoc, layout);
+        var quoteRenderer = new QuoteBlockRenderer();
+
+        // Should not throw — validates the color is parsed successfully
+        quoteRenderer.Render(quote, context);
+    }
+
+    [Fact]
+    public void ParseHexColor_InvalidHex_Throws()
+    {
+        var layout = new LayoutOptions { BlockQuoteBarColor = "not-a-color" };
+        var doc = parser.Parse("> test");
+        var quote = doc.Descendants<QuoteBlock>().First();
+
+        using var pdfDoc = new PdfDocument();
+        var context = new RenderContext(pdfDoc, layout);
+        var quoteRenderer = new QuoteBlockRenderer();
+
+        Assert.ThrowsAny<Exception>(() => quoteRenderer.Render(quote, context));
+    }
 }

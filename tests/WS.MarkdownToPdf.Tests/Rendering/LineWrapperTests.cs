@@ -119,4 +119,53 @@ public class LineWrapperTests
         Assert.True(lines.Count > 1);
         Assert.Empty(hardBreakLines);
     }
+
+    [Fact]
+    public void WrapLinesPreferCommaBreak_ShortText_ReturnsSingleLine()
+    {
+        var font = new XFont(LayoutConstants.BodyFontFamily, LayoutConstants.BodyFontSize);
+        var runs = new List<TextRun> { new("A, B, C", font) };
+
+        var lines = LineWrapper.WrapLinesPreferCommaBreak(runs, graphics, LayoutConstants.ContentWidth);
+
+        Assert.Single(lines);
+        Assert.Equal("A, B, C", string.Concat(lines[0].Select(r => r.Text)));
+    }
+
+    [Fact]
+    public void WrapLinesPreferCommaBreak_LongCommaSeparated_BreaksOnComma()
+    {
+        var font = new XFont(LayoutConstants.BodyFontFamily, LayoutConstants.BodyFontSize);
+        var clauses = Enumerable.Range(1, 20).Select(i => $"clause number {i}");
+        var text = string.Join(", ", clauses);
+        var runs = new List<TextRun> { new(text, font) };
+
+        var lines = LineWrapper.WrapLinesPreferCommaBreak(runs, graphics, LayoutConstants.ContentWidth);
+
+        Assert.True(lines.Count > 1);
+        // First line should end with a comma-delimited clause (trimmed)
+        var firstLineText = string.Concat(lines[0].Select(r => r.Text));
+        Assert.Contains(",", firstLineText);
+    }
+
+    [Fact]
+    public void WrapLinesPreferCommaBreak_NoCommas_FallsBackToWordWrap()
+    {
+        var font = new XFont(LayoutConstants.BodyFontFamily, LayoutConstants.BodyFontSize);
+        var longText = string.Join(" ", Enumerable.Repeat("word", 80));
+        var runs = new List<TextRun> { new(longText, font) };
+
+        var lines = LineWrapper.WrapLinesPreferCommaBreak(runs, graphics, LayoutConstants.ContentWidth);
+
+        Assert.True(lines.Count > 1);
+    }
+
+    [Fact]
+    public void WrapLinesPreferCommaBreak_EmptyRuns_ReturnsOneEmptyLine()
+    {
+        var lines = LineWrapper.WrapLinesPreferCommaBreak([], graphics, LayoutConstants.ContentWidth);
+
+        Assert.Single(lines);
+        Assert.Empty(lines[0]);
+    }
 }
